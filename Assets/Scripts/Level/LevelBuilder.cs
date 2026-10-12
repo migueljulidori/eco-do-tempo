@@ -305,8 +305,8 @@ namespace EcoDoTempo
             }
             else
             {
-                col.size = new Vector2(0.9f, 0.7f);
-                col.offset = new Vector2(0f, lift * 0.5f);
+                col.size = new Vector2(0.9f, 0.55f);
+                col.offset = new Vector2(0f, 0.1f);
             }
             go.AddComponent<Hazard>();
             ArtCatalog.SetEraArt(go, "Props/spikes", "Props/spikes", Vector2.one);
