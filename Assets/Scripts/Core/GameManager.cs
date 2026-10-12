@@ -34,6 +34,7 @@ namespace EcoDoTempo
         readonly HashSet<int> notesAtLevelStart = new HashSet<int>();
         Action onStoryDone;
         GameObject levelRoot;
+        LevelBackground levelBackground;
         Camera cam;
         CameraFollow camFollow;
         Vector2Int levelSize;
@@ -184,6 +185,7 @@ namespace EcoDoTempo
             FragmentsTotal = result.FragmentCount;
             FragmentsCollected = 0;
 
+            levelBackground = LevelBackground.Create(levelRoot.transform, Level.Background, levelSize);
             Player = PlayerController.Create(result.Spawn, levelRoot.transform);
             camFollow.SetTarget(Player.transform, levelSize);
 
@@ -210,6 +212,7 @@ namespace EcoDoTempo
             timeObjects.Clear();
             gates.Clear();
             Player = null;
+            levelBackground = null;
             if (levelRoot != null) Destroy(levelRoot);
             levelRoot = null;
         }
@@ -269,6 +272,7 @@ namespace EcoDoTempo
         {
             timeObjects.RemoveAll(obj => obj == null);
             foreach (var obj in timeObjects) obj.Apply(CurrentEra);
+            levelBackground?.Apply(CurrentEra);
             cam.backgroundColor = Palette.Background(CurrentEra);
         }
 

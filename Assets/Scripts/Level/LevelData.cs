@@ -17,6 +17,8 @@ namespace EcoDoTempo
         // When > 0 the era flips by itself every N seconds and Q is disabled.
         public float AutoSwitchInterval;
         public InspectNote[] Notes = new InspectNote[0];
+        // Resource key under Resources/Backgrounds/{key}_past and {key}_future.
+        public string Background;
         // Map legend (top row first):
         //  #  wall in both eras          p  block only in the past     f  block only in the future
         //  ^  spikes                     @  player start               D  exit door
@@ -59,6 +61,7 @@ namespace EcoDoTempo
             new LevelDefinition
             {
                 Name = "Salão do Relógio",
+                Background = "salao",
                 Intro = new[]
                 {
                     "As ruínas do salão principal. No passado, uma ponte cruzava o fosso.",

@@ -51,7 +51,15 @@ Inspector: Texture Type `Sprite (2D and UI)`, Mode `Multiple`, Filter `Point`, P
 | `gate.png` | comporta `G` |
 | `soil.png` | terra da semente `S` |
 
-Sugestão: canvas **32×32** (porta pode ser **32×64**). Filter Mode `Point`, Compression `None`.
+### Fundos (`Resources/Backgrounds/`)
+| Arquivo | Fase |
+| --- | --- |
+| `salao_past.png` | Salão do Relógio (passado) |
+| `salao_future.png` | Salão do Relógio (futuro, opcional) |
+
+Inspector do fundo: Sprite (2D and UI), Mode `Single`, Filter `Point` (ou Bilinear se a arte for grande), Compression `None`.
+
+Sugestão tiles/props: canvas **32×32** (porta pode ser **32×64**). Filter Mode `Point`, Compression `None`.
 
 ## Criando fases
 
