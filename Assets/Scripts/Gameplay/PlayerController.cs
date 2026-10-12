@@ -54,7 +54,7 @@ namespace EcoDoTempo
             // Spawn above the cell center so physics settles on the floor lip.
             go.transform.position = spawn + Vector2.up * 0.2f;
 
-            var visual = SpriteFactory.CreateObject("Body", go.transform, spawn, BodySize, SpriteFactory.Square, Palette.Player, 10);
+            var visual = SpriteFactory.CreateObject("Body", go.transform, spawn, BodySize, SpriteFactory.Square, Palette.Player, 20);
             visual.transform.localPosition = Vector3.zero;
             var anim = PlayerSpriteAnimator.TryAttach(visual);
 

@@ -8,15 +8,23 @@ namespace EcoDoTempo
         public Vector2 Spawn;
         public Vector2Int Size;
         public int FragmentCount;
+        // World Y of the walkable floor top (aligned to the painted background ledge).
+        public float FloorTopY;
     }
 
     // Turns the ASCII maps in LevelData into GameObjects. One map cell = one world unit.
     public static class LevelBuilder
     {
+        // Raises the whole stage so tiles/props sit on the painted floor of salao_past.
+        public const float SceneYAlign = 0.38f;
+
         struct BridgeSpan
         {
             public int Row, Start, Length;
         }
+
+        static Vector2 Cell(int col, int row, int height) =>
+            new Vector2(col, height - 1 - row + SceneYAlign);
 
         public static BuildResult Build(LevelDefinition level, Transform root)
         {
@@ -30,13 +38,14 @@ namespace EcoDoTempo
             var spans = FindBridgeSpans(level.Map, height, claimed);
             PlaceCratePiles(level.Map, root, height, claimed);
 
+            float floorTop = float.NegativeInfinity;
             int noteIndex = 0;
             for (int row = 0; row < height; row++)
             {
                 string line = level.Map[row];
                 for (int col = 0; col < line.Length; col++)
                 {
-                    var pos = new Vector2(col, height - 1 - row);
+                    var pos = Cell(col, row, height);
                     char cell = line[col];
 
                     if (claimed.Contains(new Vector2Int(col, row)))
@@ -46,6 +55,8 @@ namespace EcoDoTempo
                     {
                         case '#':
                             PlaceSolid(root, pos, level.Map, row, col, height);
+                            if (!IsSolidChar(CharAt(level.Map, row - 1, col, height)))
+                                floorTop = Mathf.Max(floorTop, pos.y + 0.5f);
                             break;
                         case 'p':
                             PlaceCrate(root, pos);
@@ -75,6 +86,16 @@ namespace EcoDoTempo
             }
 
             PlaceBridgeSpans(spans, root, height);
+            // Bridge cells are also walkable floor tops.
+            foreach (var span in spans)
+            {
+                float y = height - 1 - span.Row + SceneYAlign;
+                floorTop = Mathf.Max(floorTop, y + 0.5f);
+            }
+
+            result.FloorTopY = float.IsNegativeInfinity(floorTop)
+                ? result.Spawn.y - 0.5f
+                : floorTop;
             return result;
         }
 
@@ -101,9 +122,6 @@ namespace EcoDoTempo
             return spans;
         }
 
-        // Nudge so the wood deck sits flush with the stone lip (art reads a bit low otherwise).
-        const float BridgeYNudge = 0.38f;
-
         static void PlaceBridgeSpans(List<BridgeSpan> spans, Transform root, int height)
         {
             string plankArt = ArtCatalog.FirstExisting(
@@ -111,7 +129,7 @@ namespace EcoDoTempo
 
             foreach (var span in spans)
             {
-                float worldY = height - 1 - span.Row + BridgeYNudge;
+                float worldY = height - 1 - span.Row + SceneYAlign;
                 float centerX = span.Start + (span.Length - 1) * 0.5f;
 
                 for (int i = 0; i < span.Length; i++)
@@ -207,8 +225,7 @@ namespace EcoDoTempo
                     foreach (var c in cells)
                     {
                         claimed.Add(c);
-                        float worldY = height - 1 - c.y;
-                        var crate = PlaceCrate(root, new Vector2(c.x, worldY));
+                        var crate = PlaceCrate(root, Cell(c.x, c.y, height));
                         var sr = crate.GetComponent<SpriteRenderer>();
                         if (sr != null) sr.sortingOrder = 3;
                     }
@@ -235,18 +252,12 @@ namespace EcoDoTempo
         {
             var go = SpriteFactory.CreateObject("Block", root, pos, Vector2.one, SpriteFactory.Square, past, 0);
             go.transform.position = new Vector3(pos.x, pos.y, 0f);
-            go.transform.localScale = Vector3.one;
             go.AddComponent<BoxCollider2D>().size = Vector2.one;
             if (!string.IsNullOrEmpty(art) && ArtCatalog.Has(art))
             {
                 ArtCatalog.TryApply(go, art, Vector2.one);
                 ArtCatalog.SetEraArt(go, art, art, Vector2.one);
             }
-            go.transform.position = new Vector3(pos.x, pos.y, 0f);
-            go.transform.localScale = Vector3.one;
-            // Re-apply scale for art after locking position (TryApply sets localScale).
-            if (!string.IsNullOrEmpty(art) && ArtCatalog.Has(art))
-                ArtCatalog.TryApply(go, art, Vector2.one);
             go.transform.position = new Vector3(pos.x, pos.y, 0f);
             return TimeObject.Add(go, presence, past, future, solid: true);
         }
