@@ -1,6 +1,6 @@
 # Eco do Tempo
 
-Jogo de plataforma e quebra-cabeça 2D em Unity. Lia viaja entre o **passado** e o **futuro** para reunir os 12 fragmentos da *Canção do Eco*.
+Jogo de plataforma e puzzle 2D na Unity. Lia viaja entre o **passado** e o **futuro** para reunir os 12 fragmentos da *Canção do Eco*.
 
 ## Como rodar
 
