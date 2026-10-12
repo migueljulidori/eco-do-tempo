@@ -101,6 +101,28 @@ namespace EcoDoTempo
             return true;
         }
 
+        // Force a tile's rendered bounds to fill exactly one grid cell, centered on its transform.
+        public static void FitToCell(GameObject go, float cell = 1f)
+        {
+            var sr = go.GetComponent<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return;
+
+            var pos = go.transform.position;
+            go.transform.localScale = Vector3.one;
+
+            float nativeW = Mathf.Max(0.01f, sr.sprite.bounds.size.x);
+            float nativeH = Mathf.Max(0.01f, sr.sprite.bounds.size.y);
+            go.transform.localScale = new Vector3(cell / nativeW, cell / nativeH, 1f);
+
+            // Correct for non-center pivots so the sprite center sits on the cell center.
+            var center = sr.bounds.center;
+            go.transform.position = pos + (pos - center);
+            go.transform.position = new Vector3(pos.x, pos.y, pos.z);
+            // After scale, nudge so bounds.center == cell center.
+            center = sr.bounds.center;
+            go.transform.position += new Vector3(pos.x - center.x, pos.y - center.y, 0f);
+        }
+
         public static ArtSpriteMarker SetEraArt(GameObject go, string past, string future, Vector2 scale)
         {
             var marker = go.GetComponent<ArtSpriteMarker>();

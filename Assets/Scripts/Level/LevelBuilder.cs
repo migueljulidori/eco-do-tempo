@@ -84,7 +84,8 @@ namespace EcoDoTempo
             ArtCatalog.SetEraArt(block.gameObject, past, future, Vector2.one);
         }
 
-        // Horizontal 'p' runs (3+) → wood crates on the grid (perfect ledge align) + optional bridge trim.
+        // Horizontal 'p' runs (3+) → opaque wood tiles on the same 1×1 grid as stone floors.
+        // (Do NOT use Tiles/bridge_past here: its transparent padding always sits below the ledge.)
         static void PlaceBridgeRuns(string[] map, Transform root, int height, HashSet<Vector2Int> claimed)
         {
             for (int row = 0; row < height; row++)
@@ -100,27 +101,13 @@ namespace EcoDoTempo
                     if (length < 3) continue;
 
                     float worldY = height - 1 - row;
-                    float centerX = start + (length - 1) * 0.5f;
 
                     for (int x = start; x < start + length; x++)
                     {
                         claimed.Add(new Vector2Int(x, row));
-                        // Same placement as stone floors — cannot sink into the pit.
-                        var plank = PlaceCrate(root, new Vector2(x, worldY));
+                        var plank = PlaceBridgePlank(root, new Vector2(x, worldY));
                         var sr = plank.GetComponent<SpriteRenderer>();
                         if (sr != null) sr.sortingOrder = 1;
-                    }
-
-                    // Decorative bridge strip on top of the crate row (non-solid).
-                    if (ArtCatalog.Has("Tiles/bridge_past"))
-                    {
-                        var bridge = ArtCatalog.Create("BridgeTrim", root, new Vector2(centerX, worldY),
-                            new Vector2(length, 1f), SpriteFactory.Square, Palette.PastBlock, 2,
-                            "Tiles/bridge_past", new Vector2(length, 1f));
-                        // Lock to the same cell center as the wood — no pivot snapping.
-                        bridge.transform.position = new Vector3(centerX, worldY, 0f);
-                        ArtCatalog.SetEraArt(bridge, "Tiles/bridge_past", "Tiles/bridge_past", new Vector2(length, 1f));
-                        TimeObject.Add(bridge, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
                     }
                 }
             }
@@ -194,22 +181,45 @@ namespace EcoDoTempo
             }
         }
 
+        static TimeObject PlaceBridgePlank(Transform root, Vector2 pos)
+        {
+            // Prefer solid wood floor-like tiles; never bridge_past (padded strip).
+            string art = ArtCatalog.FirstExisting(
+                "Tiles/block_wood_past", "Tiles/block_past", "Tiles/floor_a");
+            return PlaceGridTile(root, pos, art, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock);
+        }
+
         static TimeObject PlaceCrate(Transform root, Vector2 pos)
         {
             string art = ArtCatalog.FirstExisting(
                 "Tiles/block_wood_past", "Tiles/block_past", "Tiles/block_stone_past");
-            var block = Block(root, pos, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, art);
-            // Slight visual variety so a pile reads as stacked crates, not one slab.
+            var block = PlaceGridTile(root, pos, art, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock);
             var sr = block.GetComponent<SpriteRenderer>();
             if (sr != null)
             {
                 int h = (Mathf.RoundToInt(pos.x) * 13 + Mathf.RoundToInt(pos.y) * 7) & 3;
                 sr.flipX = (h & 1) == 0;
-                // Tiny brightness jitter via color (still reads as wood).
-                float shade = 0.92f + (h * 0.03f);
-                sr.color = new Color(shade, shade, shade, 1f);
             }
             return block;
+        }
+
+        // 1×1 tile locked to the grid — same transform as stone floors.
+        static TimeObject PlaceGridTile(Transform root, Vector2 pos, string art, EraPresence presence,
+            Color past, Color future)
+        {
+            var go = SpriteFactory.CreateObject("Block", root, pos, Vector2.one, SpriteFactory.Square, past, 0);
+            go.transform.position = new Vector3(pos.x, pos.y, 0f);
+            go.transform.localScale = Vector3.one;
+            if (!string.IsNullOrEmpty(art) && ArtCatalog.Has(art))
+            {
+                ArtCatalog.TryApply(go, art, Vector2.one);
+                // Re-lock after TryApply (some pivots/PPU combos drift).
+                go.transform.position = new Vector3(pos.x, pos.y, 0f);
+                ArtCatalog.FitToCell(go);
+                ArtCatalog.SetEraArt(go, art, art, Vector2.one);
+            }
+            go.AddComponent<BoxCollider2D>().size = Vector2.one;
+            return TimeObject.Add(go, presence, past, future, solid: true);
         }
 
         static char CharAt(string[] map, int row, int col, int height)
@@ -233,16 +243,7 @@ namespace EcoDoTempo
                         : "Tiles/wall";
             }
 
-            var go = ArtCatalog.Create("Block", root, pos, Vector2.one, SpriteFactory.Square, past, 0,
-                artPath, Vector2.one);
-            // Always center-aligned 1×1 on the grid — no SnapBottom/Top.
-            go.transform.position = new Vector3(pos.x, pos.y, 0f);
-            go.transform.localScale = Vector3.one;
-            if (!string.IsNullOrEmpty(artPath))
-                ArtCatalog.TryApply(go, artPath, Vector2.one);
-            ArtCatalog.SetEraArt(go, artPath, artPath, Vector2.one);
-            go.AddComponent<BoxCollider2D>().size = Vector2.one;
-            return TimeObject.Add(go, presence, past, future, solid: true);
+            return PlaceGridTile(root, pos, artPath, presence, past, future);
         }
 
         static void Spikes(Transform root, Vector2 pos)
