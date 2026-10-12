@@ -129,24 +129,35 @@ namespace EcoDoTempo
         public const float FloorClearance = 0.12f; // props / pickups
         public const float PlayerFootClearance = 0.05f;
 
-        // Cropped bridge_past (opaque bounds only), center pivot, native height = 1 unit.
+        // Prefer pre-cropped bridge_deck (no transparent pad). Fallback crops bridge_past at runtime.
         static Sprite bridgeSprite;
 
         public static Sprite GetBridgeSprite()
         {
             if (bridgeSprite != null) return bridgeSprite;
 
-            var tex = Resources.Load<Texture2D>("Tiles/bridge_past");
-            if (tex == null) return Get("Tiles/bridge_past");
+            var deck = Get("Tiles/bridge_deck");
+            if (deck != null)
+            {
+                bridgeSprite = deck;
+                return bridgeSprite;
+            }
+
+            Texture2D tex = Resources.Load<Texture2D>("Tiles/bridge_past");
+            if (tex == null)
+            {
+                var full = Get("Tiles/bridge_past");
+                if (full != null) tex = full.texture;
+            }
+            if (tex == null) return null;
 
             tex.filterMode = FilterMode.Point;
             // Opaque content of bridge_past.png: Unity rect (1,1,126,21) on 128×32.
-            const float cropX = 1f, cropY = 1f, cropW = 126f, cropH = 21f;
             bridgeSprite = Sprite.Create(
                 tex,
-                new Rect(cropX, cropY, cropW, cropH),
+                new Rect(1f, 1f, 126f, 21f),
                 new Vector2(0.5f, 0.5f),
-                cropH);
+                21f);
             bridgeSprite.name = "bridge_past_cropped";
             return bridgeSprite;
         }
@@ -164,11 +175,39 @@ namespace EcoDoTempo
 
             float nativeW = Mathf.Max(0.01f, sprite.bounds.size.x);
             float nativeH = Mathf.Max(0.01f, sprite.bounds.size.y);
+            // Exact cell height; width matches the pit span.
             go.transform.localScale = new Vector3(worldWidth / nativeW, 1f / nativeH, 1f);
 
             if (go.GetComponent<ArtSpriteMarker>() == null)
                 go.AddComponent<ArtSpriteMarker>();
             return true;
+        }
+
+        // Put bridge deck + its support colliders flush with a stone ledge top.
+        public static void AlignBridgeToLedge(GameObject bridge, GameObject[] supports, float ledgeTop)
+        {
+            if (bridge != null)
+            {
+                SnapTopTo(bridge, ledgeTop);
+                var sr = bridge.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite != null)
+                    ledgeTop = sr.bounds.max.y;
+            }
+
+            if (supports == null) return;
+            for (int i = 0; i < supports.Length; i++)
+            {
+                var s = supports[i];
+                if (s == null) continue;
+                var col = s.GetComponent<BoxCollider2D>();
+                float half = col != null ? col.size.y * 0.5f : 0.5f;
+                float ox = col != null ? col.offset.y : 0f;
+                // transform.y + offset.y + half = ledgeTop
+                s.transform.position = new Vector3(
+                    s.transform.position.x,
+                    ledgeTop - ox - half,
+                    s.transform.position.z);
+            }
         }
 
         public static void SnapBottomTo(GameObject go, float floorTopY, float lift = -1f)

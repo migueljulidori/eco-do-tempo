@@ -100,17 +100,20 @@ namespace EcoDoTempo
                     if (length < 3) continue;
 
                     float worldY = height - 1 - row;
+                    float ledgeTop = worldY + 0.5f;
                     float centerX = start + (length - 1) * 0.5f;
+                    var supports = new GameObject[length];
 
-                    for (int x = start; x < start + length; x++)
+                    for (int i = 0; i < length; i++)
                     {
+                        int x = start + i;
                         claimed.Add(new Vector2Int(x, row));
-                        // Invisible solid — same 1×1 cell as neighboring stone floors.
                         var support = new GameObject("BridgeSupport");
                         support.transform.SetParent(root, false);
                         support.transform.position = new Vector3(x, worldY, 0f);
                         support.AddComponent<BoxCollider2D>().size = Vector2.one;
                         TimeObject.Add(support, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: true);
+                        supports[i] = support;
                     }
 
                     if (ArtCatalog.GetBridgeSprite() != null)
@@ -118,14 +121,15 @@ namespace EcoDoTempo
                         var bridge = SpriteFactory.CreateObject("Bridge", root,
                             new Vector2(centerX, worldY), Vector2.one, SpriteFactory.Square, Palette.PastBlock, 2);
                         ArtCatalog.TryApplyBridge(bridge, length);
-                        // Cropped sprite is 1 unit tall with center pivot → top = stone ledge.
                         bridge.transform.position = new Vector3(centerX, worldY, 0f);
-                        var marker = bridge.AddComponent<ArtSpriteMarker>();
-                        marker.HideRenderer = false;
-                        marker.PastArt = "Tiles/bridge_past";
-                        marker.FutureArt = "Tiles/bridge_past";
+                        var marker = bridge.GetComponent<ArtSpriteMarker>();
+                        if (marker == null) marker = bridge.AddComponent<ArtSpriteMarker>();
+                        marker.PastArt = "Tiles/bridge_deck";
+                        marker.FutureArt = "Tiles/bridge_deck";
                         marker.ArtScale = new Vector2(length, 1f);
                         TimeObject.Add(bridge, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
+                        // Deck + colliders locked to the stone ledge (not the pit).
+                        ArtCatalog.AlignBridgeToLedge(bridge, supports, ledgeTop);
                     }
                 }
             }
