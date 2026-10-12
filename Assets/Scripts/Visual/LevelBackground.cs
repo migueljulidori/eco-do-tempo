@@ -3,6 +3,7 @@ using UnityEngine;
 namespace EcoDoTempo
 {
     // Full-level backdrop from Resources/Backgrounds/{key}_past|_future.
+    // Keeps aspect ratio (no stretch), fits level width, aligns to the floor.
     public class LevelBackground : MonoBehaviour
     {
         SpriteRenderer sr;
@@ -37,10 +38,20 @@ namespace EcoDoTempo
             sr.sprite = sprite;
             sr.color = Color.white;
 
+            // Native size in world units at scale 1 (respects Pixels Per Unit).
             float spriteW = Mathf.Max(0.01f, sprite.bounds.size.x);
             float spriteH = Mathf.Max(0.01f, sprite.bounds.size.y);
-            transform.localScale = new Vector3(levelSize.x / spriteW, levelSize.y / spriteH, 1f);
-            transform.position = new Vector3((levelSize.x - 1) * 0.5f, (levelSize.y - 1) * 0.5f, 0f);
+
+            // Uniform scale: match level width, never squash the art.
+            float scale = levelSize.x / spriteW;
+            transform.localScale = new Vector3(scale, scale, 1f);
+
+            float scaledH = spriteH * scale;
+            // Horizontal center of the map; bottom of the sprite on the level floor line.
+            float centerX = (levelSize.x - 1) * 0.5f;
+            float levelBottom = -0.5f;
+            float centerY = levelBottom + scaledH * 0.5f;
+            transform.position = new Vector3(centerX, centerY, 0f);
         }
 
         Sprite LoadSprite(Era era)
