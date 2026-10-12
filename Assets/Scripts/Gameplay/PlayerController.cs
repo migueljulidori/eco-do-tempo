@@ -74,7 +74,7 @@ namespace EcoDoTempo
             body.edgeRadius = 0.02f;
             body.sharedMaterial = new PhysicsMaterial2D("NoFriction") { friction = 0f, bounciness = 0f };
 
-            // Keep pixel-art feet on the collider bottom (no sinking into the floor).
+            // Keep pixel-art feet on the collider bottom (slight lift so toes clear the floor lip).
             if (anim != null)
             {
                 var sr = visual.GetComponent<SpriteRenderer>();
@@ -82,7 +82,7 @@ namespace EcoDoTempo
                 {
                     float colliderBottom = -body.size.y * 0.5f;
                     float spriteBottom = sr.sprite.bounds.min.y * visual.transform.localScale.y;
-                    visual.transform.localPosition = new Vector3(0f, colliderBottom - spriteBottom + 0.02f, 0f);
+                    visual.transform.localPosition = new Vector3(0f, colliderBottom - spriteBottom + 0.1f, 0f);
                 }
             }
 

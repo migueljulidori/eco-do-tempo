@@ -109,7 +109,8 @@ namespace EcoDoTempo
         }
 
         // Works with Center or Bottom pivots: rests the sprite bottom on floorTopY.
-        public static void SnapBottomTo(GameObject go, float floorTopY, float lift = 0.02f)
+        // lift keeps feet/props above the tile lip so they don't sink into the floor art.
+        public static void SnapBottomTo(GameObject go, float floorTopY, float lift = 0.1f)
         {
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr == null || sr.sprite == null) return;
