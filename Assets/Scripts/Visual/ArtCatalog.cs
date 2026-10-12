@@ -32,8 +32,9 @@ namespace EcoDoTempo
             return created;
         }
 
+        // Bridge trim uses Center so it sits on the same grid cell as wood planks.
         static bool BottomPivotPath(string path) =>
-            path == "Tiles/bridge_past" || path == "Props/blockade" || path == "Props/door"
+            path == "Props/blockade" || path == "Props/door"
             || path == "Props/door_open" || path == "Props/spikes" || path == "Props/lever"
             || path == "Props/lever_pulled" || path == "Props/sapling" || path == "Props/inspect";
 
