@@ -8,7 +8,7 @@ namespace EcoDoTempo
     {
         const int Size = 16;
 
-        static Sprite square, triangle, circle, diamond;
+        static Sprite square, triangle, circle, diamond, softCircle;
         static Material material;
 
         public static Sprite Square => square != null ? square : square = Make((x, y) => true);
@@ -20,6 +20,9 @@ namespace EcoDoTempo
 
         public static Sprite Diamond => diamond != null ? diamond : diamond = Make((x, y) =>
             Mathf.Abs(x - 0.5f) + Mathf.Abs(y - 0.5f) <= 0.5f);
+
+        // Soft radial disc for a light halo behind pickups.
+        public static Sprite SoftCircle => softCircle != null ? softCircle : softCircle = MakeSoft();
 
         // Unlit so sprites look the same in Built-in, URP and URP 2D projects.
         static Material Material
@@ -73,6 +76,33 @@ namespace EcoDoTempo
             tex.SetPixels32(pixels);
             tex.Apply();
             return Sprite.Create(tex, new Rect(0, 0, Size, Size), new Vector2(0.5f, 0.5f), Size);
+        }
+
+        static Sprite MakeSoft()
+        {
+            const int n = 48;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            var pixels = new Color[n * n];
+            float c = (n - 1) * 0.5f;
+            for (int y = 0; y < n; y++)
+            {
+                for (int x = 0; x < n; x++)
+                {
+                    float dx = (x - c) / c;
+                    float dy = (y - c) / c;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = Mathf.Clamp01(1f - d);
+                    a *= a;
+                    pixels[y * n + x] = new Color(1f, 1f, 1f, a);
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), n);
         }
     }
 }

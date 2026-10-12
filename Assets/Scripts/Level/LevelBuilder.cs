@@ -319,6 +319,10 @@ namespace EcoDoTempo
             var frag = go.AddComponent<MelodyFragment>();
             frag.Order = order;
             frag.UseCustomArt = ArtCatalog.Has("Props/fragment") || ArtCatalog.Has(art);
+            var glow = presence == EraPresence.FutureOnly
+                ? new Color(0.45f, 0.95f, 1f, 0.7f)
+                : new Color(1f, 0.84f, 0.35f, 0.75f);
+            SoftGlow.Attach(go, glow, 1.35f, 4);
             TimeObject.Add(go, presence, Palette.Fragment, Palette.FutureFragment, solid: false);
         }
     }

@@ -15,6 +15,7 @@ namespace EcoDoTempo
                 ArtCatalog.SnapBottomTo(go, ArtCatalog.FloorTop(pos));
             go.AddComponent<BoxCollider2D>().isTrigger = true;
             go.AddComponent<Inspectable>().note = note;
+            SoftGlow.Attach(go, new Color(1f, 0.92f, 0.55f, 0.6f), 1.15f, 2);
             TimeObject.Add(go, EraPresence.Both, Palette.Inspectable, Palette.FutureInspectable, solid: false);
         }
 
