@@ -72,17 +72,14 @@ namespace EcoDoTempo
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             var body = go.AddComponent<BoxCollider2D>();
-            // Shorter collider so feet can sit clearly above the floor art.
-            body.size = new Vector2(BodySize.x - 0.08f, BodySize.y - 0.28f);
-            body.offset = new Vector2(0f, -0.02f);
-            body.edgeRadius = 0.02f;
+            body.size = new Vector2(BodySize.x - 0.06f, BodySize.y - 0.08f);
+            body.offset = Vector2.zero;
+            body.edgeRadius = 0.01f;
             body.sharedMaterial = new PhysicsMaterial2D("NoFriction") { friction = 0f, bounciness = 0f };
 
             float colliderBottom = body.offset.y - body.size.y * 0.5f;
             if (anim != null)
                 ArtCatalog.AlignFeet(visual.transform, colliderBottom, ArtCatalog.PlayerFootClearance);
-            else
-                visual.transform.localPosition = new Vector3(0f, ArtCatalog.PlayerFootClearance * 0.5f, 0f);
 
             var player = go.AddComponent<PlayerController>();
             player.rb = rb;

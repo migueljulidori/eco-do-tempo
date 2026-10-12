@@ -84,8 +84,7 @@ namespace EcoDoTempo
             ArtCatalog.SetEraArt(block.gameObject, past, future, Vector2.one);
         }
 
-        // Horizontal 'p' runs (3+) → opaque wood tiles on the same 1×1 grid as stone floors.
-        // (Do NOT use Tiles/bridge_past here: its transparent padding always sits below the ledge.)
+        // Horizontal 'p' runs (3+) → real bridge_past (cropped) + solid colliders flush with stone.
         static void PlaceBridgeRuns(string[] map, Transform root, int height, HashSet<Vector2Int> claimed)
         {
             for (int row = 0; row < height; row++)
@@ -101,13 +100,32 @@ namespace EcoDoTempo
                     if (length < 3) continue;
 
                     float worldY = height - 1 - row;
+                    float centerX = start + (length - 1) * 0.5f;
 
                     for (int x = start; x < start + length; x++)
                     {
                         claimed.Add(new Vector2Int(x, row));
-                        var plank = PlaceBridgePlank(root, new Vector2(x, worldY));
-                        var sr = plank.GetComponent<SpriteRenderer>();
-                        if (sr != null) sr.sortingOrder = 1;
+                        // Invisible solid — same 1×1 cell as neighboring stone floors.
+                        var support = new GameObject("BridgeSupport");
+                        support.transform.SetParent(root, false);
+                        support.transform.position = new Vector3(x, worldY, 0f);
+                        support.AddComponent<BoxCollider2D>().size = Vector2.one;
+                        TimeObject.Add(support, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: true);
+                    }
+
+                    if (ArtCatalog.GetBridgeSprite() != null)
+                    {
+                        var bridge = SpriteFactory.CreateObject("Bridge", root,
+                            new Vector2(centerX, worldY), Vector2.one, SpriteFactory.Square, Palette.PastBlock, 2);
+                        ArtCatalog.TryApplyBridge(bridge, length);
+                        // Cropped sprite is 1 unit tall with center pivot → top = stone ledge.
+                        bridge.transform.position = new Vector3(centerX, worldY, 0f);
+                        var marker = bridge.AddComponent<ArtSpriteMarker>();
+                        marker.HideRenderer = false;
+                        marker.PastArt = "Tiles/bridge_past";
+                        marker.FutureArt = "Tiles/bridge_past";
+                        marker.ArtScale = new Vector2(length, 1f);
+                        TimeObject.Add(bridge, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
                     }
                 }
             }
@@ -179,14 +197,6 @@ namespace EcoDoTempo
                     }
                 }
             }
-        }
-
-        static TimeObject PlaceBridgePlank(Transform root, Vector2 pos)
-        {
-            // Prefer solid wood floor-like tiles; never bridge_past (padded strip).
-            string art = ArtCatalog.FirstExisting(
-                "Tiles/block_wood_past", "Tiles/block_past", "Tiles/floor_a");
-            return PlaceGridTile(root, pos, art, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock);
         }
 
         static TimeObject PlaceCrate(Transform root, Vector2 pos)

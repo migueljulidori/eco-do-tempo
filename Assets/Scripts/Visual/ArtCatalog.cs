@@ -126,8 +126,50 @@ namespace EcoDoTempo
             return marker;
         }
 
-        public const float FloorClearance = 0.35f;
-        public const float PlayerFootClearance = 0.48f;
+        public const float FloorClearance = 0.12f; // props / pickups
+        public const float PlayerFootClearance = 0.05f;
+
+        // Cropped bridge_past (opaque bounds only), center pivot, native height = 1 unit.
+        static Sprite bridgeSprite;
+
+        public static Sprite GetBridgeSprite()
+        {
+            if (bridgeSprite != null) return bridgeSprite;
+
+            var tex = Resources.Load<Texture2D>("Tiles/bridge_past");
+            if (tex == null) return Get("Tiles/bridge_past");
+
+            tex.filterMode = FilterMode.Point;
+            // Opaque content of bridge_past.png: Unity rect (1,1,126,21) on 128×32.
+            const float cropX = 1f, cropY = 1f, cropW = 126f, cropH = 21f;
+            bridgeSprite = Sprite.Create(
+                tex,
+                new Rect(cropX, cropY, cropW, cropH),
+                new Vector2(0.5f, 0.5f),
+                cropH);
+            bridgeSprite.name = "bridge_past_cropped";
+            return bridgeSprite;
+        }
+
+        public static bool TryApplyBridge(GameObject go, float worldWidth)
+        {
+            var sprite = GetBridgeSprite();
+            if (sprite == null) return false;
+
+            var sr = go.GetComponent<SpriteRenderer>();
+            if (sr == null) return false;
+
+            sr.sprite = sprite;
+            sr.color = Color.white;
+
+            float nativeW = Mathf.Max(0.01f, sprite.bounds.size.x);
+            float nativeH = Mathf.Max(0.01f, sprite.bounds.size.y);
+            go.transform.localScale = new Vector3(worldWidth / nativeW, 1f / nativeH, 1f);
+
+            if (go.GetComponent<ArtSpriteMarker>() == null)
+                go.AddComponent<ArtSpriteMarker>();
+            return true;
+        }
 
         public static void SnapBottomTo(GameObject go, float floorTopY, float lift = -1f)
         {

@@ -85,11 +85,17 @@ namespace EcoDoTempo
             string path = era == Era.Past ? art.PastArt : art.FutureArt;
             if (string.IsNullOrEmpty(path)) path = art.PastArt;
             if (string.IsNullOrEmpty(path) || path == appliedArt) return;
+            if (path == "Tiles/bridge_past")
+            {
+                if (ArtCatalog.TryApplyBridge(gameObject, art.ArtScale.x))
+                    appliedArt = path;
+                return;
+            }
+
             if (!ArtCatalog.Has(path)) return;
             if (ArtCatalog.TryApply(gameObject, path, art.ArtScale))
             {
                 appliedArt = path;
-                // Keep 1×1 tiles glued to the grid after sprite swaps.
                 if (Mathf.Abs(art.ArtScale.x - 1f) < 0.01f && Mathf.Abs(art.ArtScale.y - 1f) < 0.01f)
                     ArtCatalog.FitToCell(gameObject);
             }
