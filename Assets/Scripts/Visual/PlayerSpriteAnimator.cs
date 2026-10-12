@@ -1,11 +1,20 @@
+using System;
+using System.Linq;
 using UnityEngine;
 
 namespace EcoDoTempo
 {
-    // Plays a horizontal walk sheet loaded from Resources/Characters/lia_walk.
+    // Plays a walk sheet from Resources/Characters (any PNG, prefers lia_walk).
     public class PlayerSpriteAnimator : MonoBehaviour
     {
-        public const string ResourcePath = "Characters/lia_walk";
+        static readonly string[] PreferredPaths =
+        {
+            "Characters/lia_walk",
+            "Characters/Lia_walk",
+            "Characters/lia",
+            "Characters/player",
+        };
+
         const float FramesPerSecond = 10f;
 
         SpriteRenderer sr;
@@ -16,20 +25,54 @@ namespace EcoDoTempo
 
         public static PlayerSpriteAnimator TryAttach(GameObject body)
         {
-            var sprites = Resources.LoadAll<Sprite>(ResourcePath);
-            if (sprites == null || sprites.Length == 0) return null;
+            var sprites = LoadWalkSprites();
+            if (sprites == null || sprites.Length == 0)
+            {
+                Debug.LogWarning(
+                    "[Eco do Tempo] Sprite da Lia não encontrado. Coloque o PNG em:\n" +
+                    "  Assets/Resources/Characters/lia_walk.png\n" +
+                    "Depois no Inspector: Texture Type = Sprite (2D and UI), Sprite Mode = Multiple, " +
+                    "Filter Mode = Point, Apply → Sprite Editor → Slice (Grid) → Apply. Veja o Console.");
+                return null;
+            }
 
             var sr = body.GetComponent<SpriteRenderer>();
             if (sr == null) return null;
 
+            Debug.Log($"[Eco do Tempo] Lia usando {sprites.Length} frame(s) de '{sprites[0].texture.name}'.");
+
             sr.sprite = sprites[0];
             sr.color = Color.white;
-            body.transform.localScale = Vector3.one;
+            body.transform.localScale = Vector3.one * 1.2f;
 
             var anim = body.AddComponent<PlayerSpriteAnimator>();
             anim.sr = sr;
             anim.frames = sprites;
             return anim;
+        }
+
+        static Sprite[] LoadWalkSprites()
+        {
+            foreach (var path in PreferredPaths)
+            {
+                var sprites = Resources.LoadAll<Sprite>(path);
+                if (sprites != null && sprites.Length > 0)
+                    return SortFrames(sprites);
+            }
+
+            // Any sprite sheet inside Resources/Characters/
+            var any = Resources.LoadAll<Sprite>("Characters");
+            if (any == null || any.Length == 0) return Array.Empty<Sprite>();
+
+            var byTexture = any.GroupBy(s => s.texture).OrderByDescending(g => g.Count());
+            return SortFrames(byTexture.First().ToArray());
+        }
+
+        static Sprite[] SortFrames(Sprite[] sprites)
+        {
+            return sprites
+                .OrderBy(s => s.name, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
         }
 
         public void Tick(float horizontal, bool grounded)
@@ -41,7 +84,7 @@ namespace EcoDoTempo
             sr.flipX = !facingRight;
 
             bool walking = grounded && Mathf.Abs(horizontal) > 0.01f;
-            if (!walking)
+            if (!walking || frames.Length == 1)
             {
                 index = 0;
                 timer = 0f;
