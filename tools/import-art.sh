@@ -42,7 +42,8 @@ for pair in \
   "Props/lever_pulled.png:lever_pulled.png" \
   "Props/door.png:door.png" \
   "Props/door_open.png:door_open.png" \
-  "Props/sapling.png:sapling.png"
+  "Props/sapling.png:sapling.png" \
+  "Props/blockade.png:blockade.png"
 do
   dest="${pair%%:*}"; name="${pair##*:}"
   map_copy "$dest" "$name"
@@ -56,8 +57,6 @@ for pair in \
   "Tiles/floor_a.png:floor_a.png" \
   "Tiles/floor_b.png:floor_b.png" \
   "Tiles/floor_c.png:floor_c.png" \
-  "Tiles/block_past.png:block_past.png" \
-  "Tiles/block_future.png:block_future.png" \
   "Tiles/block_wood_past.png:block_wood_past.png" \
   "Tiles/block_wood_future.png:block_wood_future.png" \
   "Tiles/block_stone_past.png:block_stone_past.png" \
@@ -72,7 +71,17 @@ do
   dest="${pair%%:*}"; name="${pair##*:}"
   map_copy "$dest" "$name"
 done
-map_copy Props/blockade.png blockade.png
+# Aliases: generic block_* → wood variants when dedicated files are absent.
+if [[ ! -f "$ROOT/Assets/Resources/Tiles/block_past.png" && -f "$ROOT/Assets/Resources/Tiles/block_wood_past.png" ]]; then
+  cp -f "$ROOT/Assets/Resources/Tiles/block_wood_past.png" "$ROOT/Assets/Resources/Tiles/block_past.png"
+  echo "  OK  Tiles/block_past.png  <-  block_wood_past.png"
+fi
+if [[ ! -f "$ROOT/Assets/Resources/Tiles/block_future.png" && -f "$ROOT/Assets/Resources/Tiles/block_wood_future.png" ]]; then
+  cp -f "$ROOT/Assets/Resources/Tiles/block_wood_future.png" "$ROOT/Assets/Resources/Tiles/block_future.png"
+  echo "  OK  Tiles/block_future.png  <-  block_wood_future.png"
+fi
+map_copy Tiles/block_past.png block_past.png
+map_copy Tiles/block_future.png block_future.png
 echo "== UI =="
 map_copy UI/fragment_ui.png fragment_ui.png
 echo "== Backgrounds =="

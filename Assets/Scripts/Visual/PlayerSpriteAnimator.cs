@@ -16,6 +16,7 @@ namespace EcoDoTempo
         };
 
         const float FramesPerSecond = 10f;
+        const float TargetHeight = 0.95f;
 
         SpriteRenderer sr;
         Sprite[] frames;
@@ -43,12 +44,20 @@ namespace EcoDoTempo
 
             sr.sprite = sprites[0];
             sr.color = Color.white;
-            body.transform.localScale = Vector3.one * 1.2f;
+            FitHeight(body.transform, sr, sprites[0]);
 
             var anim = body.AddComponent<PlayerSpriteAnimator>();
             anim.sr = sr;
             anim.frames = sprites;
             return anim;
+        }
+
+        static void FitHeight(Transform body, SpriteRenderer sr, Sprite sprite)
+        {
+            float nativeH = Mathf.Max(0.01f, sprite.bounds.size.y);
+            float s = TargetHeight / nativeH;
+            body.localScale = new Vector3(s, s, 1f);
+            sr.sprite = sprite;
         }
 
         static Sprite[] LoadWalkSprites()

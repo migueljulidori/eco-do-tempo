@@ -16,6 +16,7 @@ namespace EcoDoTempo
 
         Rigidbody2D rb;
         BoxCollider2D body;
+        Transform visual;
         Transform scarf;
         PlayerSpriteAnimator spriteAnim;
         Vector2 spawn;
@@ -50,8 +51,8 @@ namespace EcoDoTempo
         {
             var go = new GameObject("Lia");
             go.transform.SetParent(parent, false);
-            // Spawn a bit above the cell center so physics settles on the floor lip.
-            go.transform.position = spawn + Vector2.up * 0.08f;
+            // Spawn above the cell center so physics settles on the floor lip.
+            go.transform.position = spawn + Vector2.up * 0.2f;
 
             var visual = SpriteFactory.CreateObject("Body", go.transform, spawn, BodySize, SpriteFactory.Square, Palette.Player, 10);
             visual.transform.localPosition = Vector3.zero;
@@ -71,31 +72,34 @@ namespace EcoDoTempo
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             var body = go.AddComponent<BoxCollider2D>();
-            // Slightly shorter collider so the sprite can sit above the floor without clipping.
-            body.size = new Vector2(BodySize.x - 0.04f, BodySize.y - 0.12f);
+            // Shorter collider so feet can sit clearly above the floor art.
+            body.size = new Vector2(BodySize.x - 0.08f, BodySize.y - 0.28f);
             body.offset = new Vector2(0f, -0.02f);
-            body.edgeRadius = 0.01f;
+            body.edgeRadius = 0.02f;
             body.sharedMaterial = new PhysicsMaterial2D("NoFriction") { friction = 0f, bounciness = 0f };
 
-            // Align sprite feet above the collider bottom / floor contact.
+            float colliderBottom = body.offset.y - body.size.y * 0.5f;
             if (anim != null)
-            {
-                var sr = visual.GetComponent<SpriteRenderer>();
-                if (sr != null && sr.sprite != null)
-                {
-                    float colliderBottom = body.offset.y - body.size.y * 0.5f;
-                    float spriteBottom = sr.sprite.bounds.min.y * visual.transform.localScale.y;
-                    visual.transform.localPosition = new Vector3(0f, colliderBottom - spriteBottom + ArtCatalog.FloorClearance, 0f);
-                }
-            }
+                ArtCatalog.AlignFeet(visual.transform, colliderBottom, ArtCatalog.PlayerFootClearance);
+            else
+                visual.transform.localPosition = new Vector3(0f, ArtCatalog.PlayerFootClearance * 0.5f, 0f);
 
             var player = go.AddComponent<PlayerController>();
             player.rb = rb;
             player.body = body;
+            player.visual = visual.transform;
             player.scarf = scarfGo != null ? scarfGo.transform : null;
             player.spriteAnim = anim;
-            player.spawn = spawn;
+            player.spawn = spawn + Vector2.up * 0.2f;
             return player;
+        }
+
+        void LateUpdate()
+        {
+            if (visual == null || body == null) return;
+            float colliderBottom = body.offset.y - body.size.y * 0.5f;
+            if (spriteAnim != null)
+                ArtCatalog.AlignFeet(visual, colliderBottom, ArtCatalog.PlayerFootClearance);
         }
 
         void Update()

@@ -45,11 +45,17 @@ Inspector: Texture Type `Sprite (2D and UI)`, Mode `Multiple`, Filter `Point`, P
 ### Chão / blocos (`Resources/Tiles/`)
 | Arquivo | O quê |
 | --- | --- |
-| `wall.png` | parede `#` |
-| `block_past.png` | bloco só no passado `p` |
-| `block_future.png` | bloco só no futuro `f` |
-| `gate.png` | comporta `G` |
+| `wall.png` / `wall_b.png` / `wall_c.png` | parede `#` |
+| `floor_a.png` / `floor_b.png` / `floor_c.png` | superfície caminhável `#` |
+| `block_stone_past.png` / `block_stone_future.png` | pedra (chão / parede) |
+| `block_wood_past.png` / `block_wood_future.png` | madeira (`p` / `f` curtos) |
+| `block_metal_past.png` / `block_metal_future.png` | metal (variação) |
+| `bridge_past.png` (128×32) | ponte no vão longo de `p` |
+| `blockade.png` em `Props/` (64×64) | comporta `G` |
+| `gate.png` | fallback da comporta |
 | `soil.png` | terra da semente `S` |
+
+Inspector dos tiles/props: Texture Type `Sprite (2D and UI)`, Mode `Single` (tileset = `Multiple` + Slice 32×32), Filter `Point`, Compression `None`, **PPU 32**. Ponte e bloqueio: pivot **Bottom Center**.
 
 ### Fundos (`Resources/Backgrounds/`)
 | Arquivo | Fase |

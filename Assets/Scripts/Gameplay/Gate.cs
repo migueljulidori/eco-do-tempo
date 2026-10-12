@@ -12,18 +12,18 @@ namespace EcoDoTempo
                        : ArtCatalog.Has("Tiles/gate") ? "Tiles/gate"
                        : null;
 
-            // Blockade art is 64×64 (2×2 units); sit on the cell floor and cover ~2 units.
-            Vector2 scale = art == "Props/blockade" ? new Vector2(1.4f, 0f) : Vector2.one;
             var block = LevelBuilder.Block(root, pos, EraPresence.Both, Palette.PastGate, Palette.FutureGate, art);
+
             if (art == "Props/blockade")
             {
-                ArtCatalog.TryApply(block.gameObject, art, scale);
-                ArtCatalog.SnapBottomTo(block.gameObject, ArtCatalog.FloorTop(pos));
+                // Design: 64×64 → 2×2 world units, bottom on the floor cell.
+                ArtCatalog.TryApply(block.gameObject, art, new Vector2(2f, 0f));
+                ArtCatalog.SnapBottomTo(block.gameObject, ArtCatalog.FloorTop(pos), lift: 0.02f);
                 var col = block.GetComponent<BoxCollider2D>();
                 if (col != null)
                 {
-                    col.size = new Vector2(1.2f, 1.8f);
-                    col.offset = new Vector2(0f, 0.9f);
+                    col.size = new Vector2(1.6f, 1.9f);
+                    col.offset = new Vector2(0f, 0.95f);
                 }
             }
 

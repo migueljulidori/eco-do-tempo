@@ -1,0 +1,14 @@
+Eco do Tempo — ponte, bloqueio e blocos
+bridge_past.png: 128×32, transparente. Ponte de madeira antiga com latão e reforços inferiores. Exportada preservando proporções da arte, sem esticar.
+blockade.png: 64×64, transparente. Comporta robusta de ferro, pedra e trava mecânica.
+blocks_tileset.png: 96×64, 3 colunas e 2 linhas de tiles 32×32. Linha superior passado; inferior futuro. Colunas pedra, madeira, metal.
+block_stone_past.png / block_stone_future.png: 32×32. Pedra quente desgastada / pedra fria rachada.
+block_wood_past.png / block_wood_future.png: 32×32. Madeira e latão / madeira deteriorada e ferragens corroídas.
+block_metal_past.png / block_metal_future.png: 32×32. Placa de ferro com latão / metal frio oxidado com acento ciano.
+Todos: Point, Compression None, mipmaps off, PPU 32. Sprite Single nos arquivos individuais; Multiple na sheet, Slice Grid By Cell Size 32×32, padding 0.
+Pivot Bottom Center na ponte e bloqueio; Center nos blocos. Scale uniforme. Ponte ocupa 4 unidades de canvas, bloqueio 2×2 unidades, cada bloco 1×1.
+Ponte: BoxCollider2D ajustado somente ao tablado. No futuro desativar ponte e collider; ativar espinhos. A ponte pode ser montada também com tiles de madeira se a largura do fosso exigir módulos.
+Bloqueio: BoxCollider2D sólido, desativar collider ao abrir. Não há estado aberto nesta entrega.
+Blocos: TilemapCollider2D se usados no Tilemap ou BoxCollider2D para objetos isolados. Aparência não define comportamento automaticamente.
+Criados com imagegen, exportados nearest-neighbor. Dimensões conferidas. Não testados no Unity; encaixe sem emendas não garantido.
+Prompts: Pixel art, exact canvas size, no text, no stretch, dark 1px outlines, no blur no 3D. Bridge 128×32 transparent background, worn wood deck flat walking surface, tarnished brass and braces below. Blockade 64×64 transparent background, thick iron bars, stone frame and brass lock. Tileset 96×64 opaque, six 32×32 blocks in 3×2 grid, no padding: past stone wood metal above and same structures aged in cold future below. Warm palette #2A1810 #5A3A28 #8B5A2B #C4A574 #E6A64D; cold #0A101F #1A2438 #38506B #5A6F86 #A0B4C8, restrained #4DE6FF.

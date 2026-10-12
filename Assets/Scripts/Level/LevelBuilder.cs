@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace EcoDoTempo
@@ -20,6 +21,9 @@ namespace EcoDoTempo
             foreach (var row in level.Map) width = Mathf.Max(width, row.Length);
             result.Size = new Vector2Int(width, height);
 
+            var bridgeCells = new HashSet<Vector2Int>();
+            PlaceBridgeRuns(level.Map, root, height, bridgeCells);
+
             int noteIndex = 0;
             for (int row = 0; row < height; row++)
             {
@@ -27,17 +31,25 @@ namespace EcoDoTempo
                 for (int col = 0; col < line.Length; col++)
                 {
                     var pos = new Vector2(col, height - 1 - row);
-                    switch (line[col])
+                    char cell = line[col];
+
+                    // Horizontal bridge runs already created colliders + bridge art.
+                    if (cell == 'p' && bridgeCells.Contains(new Vector2Int(col, row)))
+                        continue;
+
+                    switch (cell)
                     {
                         case '#':
                             Block(root, pos, EraPresence.Both, Palette.PastWall, Palette.FutureWall,
                                 SolidArt(level.Map, row, col, pos, height));
                             break;
                         case 'p':
-                            Block(root, pos, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, "Tiles/block_past");
+                            Block(root, pos, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock,
+                                ArtCatalog.PickPastBlock(pos));
                             break;
                         case 'f':
-                            Block(root, pos, EraPresence.FutureOnly, Palette.FutureBlock, Palette.FutureBlock, "Tiles/block_future");
+                            Block(root, pos, EraPresence.FutureOnly, Palette.FutureBlock, Palette.FutureBlock,
+                                ArtCatalog.PickFutureBlock(pos));
                             break;
                         case '^': Spikes(root, pos); break;
                         case '@': result.Spawn = pos; break;
@@ -61,26 +73,73 @@ namespace EcoDoTempo
             return result;
         }
 
+        // Long horizontal 'p' runs become one bridge_past span + wood deck colliders.
+        static void PlaceBridgeRuns(string[] map, Transform root, int height, HashSet<Vector2Int> claimed)
+        {
+            if (!ArtCatalog.Has("Tiles/bridge_past")) return;
+
+            for (int row = 0; row < height; row++)
+            {
+                string line = map[row];
+                int col = 0;
+                while (col < line.Length)
+                {
+                    if (line[col] != 'p') { col++; continue; }
+                    int start = col;
+                    while (col < line.Length && line[col] == 'p') col++;
+                    int length = col - start;
+                    // Need a real span; short pillars stay as wood/stone tiles.
+                    if (length < 3) continue;
+
+                    float worldY = height - 1 - row;
+                    float deckTop = worldY + 0.5f;
+
+                    for (int x = start; x < start + length; x++)
+                    {
+                        claimed.Add(new Vector2Int(x, row));
+                        var support = Block(root, new Vector2(x, worldY), EraPresence.PastOnly,
+                            Palette.PastBlock, Palette.PastBlock, "Tiles/block_wood_past");
+                        var sr = support.GetComponent<SpriteRenderer>();
+                        if (sr != null) sr.enabled = false;
+
+                        // Collider only on the deck thickness (design: tablado).
+                        var col2d = support.GetComponent<BoxCollider2D>();
+                        if (col2d != null)
+                        {
+                            col2d.size = new Vector2(1f, 0.35f);
+                            col2d.offset = new Vector2(0f, 0.325f);
+                        }
+                    }
+
+                    float centerX = start + (length - 1) * 0.5f;
+                    // Native bridge is 4×1 units; scale width to the run, keep aspect.
+                    var bridge = ArtCatalog.Create("Bridge", root, new Vector2(centerX, worldY),
+                        new Vector2(length, 1f), SpriteFactory.Square, Palette.PastBlock, 1,
+                        "Tiles/bridge_past", new Vector2(length, 0f));
+                    // Art has ~10px empty pad above the deck on a 32px canvas — put deck on collider top.
+                    var bridgeSr = bridge.GetComponent<SpriteRenderer>();
+                    if (bridgeSr != null && bridgeSr.sprite != null)
+                    {
+                        const float topPad = 10f / 32f;
+                        float h = bridgeSr.bounds.size.y;
+                        ArtCatalog.SnapBottomTo(bridge, deckTop - h * (1f - topPad), lift: 0f);
+                    }
+                    TimeObject.Add(bridge, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
+                }
+            }
+        }
+
         static bool IsSolidChar(char c) =>
             c == '#' || c == 'p' || c == 'f' || c == 'G' || c == 'S';
 
-        // Walkable surface (air above) -> floor A/B/C only. Buried / ceiling -> wall variants.
         static string SolidArt(string[] map, int row, int col, Vector2 pos, int height)
         {
             char above = '#';
             if (row > 0 && col < map[row - 1].Length) above = map[row - 1][col];
-            else if (row == 0) above = '#'; // top row is ceiling, not floor
-
-            char below = '#';
-            if (row + 1 < height && col < map[row + 1].Length) below = map[row + 1][col];
+            else if (row == 0) above = '#';
 
             bool airAbove = !IsSolidChar(above);
-            bool airBelow = !IsSolidChar(below);
-
-            // Floor/ledge: solid with empty space above.
             if (airAbove) return ArtCatalog.PickFloor(pos);
-            // Ceiling underside: solid with empty space below — use wall variants, not floor.
-            if (airBelow) return ArtCatalog.PickWall(pos);
             return ArtCatalog.PickWall(pos);
         }
 
