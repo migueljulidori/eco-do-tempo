@@ -16,7 +16,7 @@ namespace EcoDoTempo
     public static class LevelBuilder
     {
         // Raises the whole stage so tiles/props sit on the painted floor of salao_past.
-        public const float SceneYAlign = 0.38f;
+        public const float SceneYAlign = 0.12f;
 
         struct BridgeSpan
         {
