@@ -17,6 +17,7 @@ namespace EcoDoTempo
         Rigidbody2D rb;
         BoxCollider2D body;
         Transform scarf;
+        PlayerSpriteAnimator spriteAnim;
         Vector2 spawn;
         float coyoteTimer;
         float jumpBufferTimer;
@@ -53,8 +54,14 @@ namespace EcoDoTempo
 
             var visual = SpriteFactory.CreateObject("Body", go.transform, spawn, BodySize, SpriteFactory.Square, Palette.Player, 10);
             visual.transform.localPosition = Vector3.zero;
-            var scarf = SpriteFactory.CreateObject("Scarf", go.transform, spawn, new Vector2(0.9f, 0.15f), SpriteFactory.Square, Palette.PlayerScarf, 11);
-            scarf.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+            var anim = PlayerSpriteAnimator.TryAttach(visual);
+
+            GameObject scarfGo = null;
+            if (anim == null)
+            {
+                scarfGo = SpriteFactory.CreateObject("Scarf", go.transform, spawn, new Vector2(0.9f, 0.15f), SpriteFactory.Square, Palette.PlayerScarf, 11);
+                scarfGo.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+            }
 
             var rb = go.AddComponent<Rigidbody2D>();
             rb.gravityScale = GravityScale;
@@ -70,7 +77,8 @@ namespace EcoDoTempo
             var player = go.AddComponent<PlayerController>();
             player.rb = rb;
             player.body = body;
-            player.scarf = scarf.transform;
+            player.scarf = scarfGo != null ? scarfGo.transform : null;
+            player.spriteAnim = anim;
             player.spawn = spawn;
             return player;
         }
@@ -103,7 +111,9 @@ namespace EcoDoTempo
             if (GameInput.JumpReleased && v.y > 0f) v.y *= 0.5f;
             Velocity = v;
 
-            if (input != 0f) scarf.localPosition = new Vector3(-0.1f * Mathf.Sign(input), 0.1f, 0f);
+            if (scarf != null && input != 0f)
+                scarf.localPosition = new Vector3(-0.1f * Mathf.Sign(input), 0.1f, 0f);
+            if (spriteAnim != null) spriteAnim.Tick(input, grounded);
 
             Nearby = FindInteractable(gm.CurrentEra);
             if (Nearby != null && GameInput.InteractPressed) Nearby.Interact(gm.CurrentEra);

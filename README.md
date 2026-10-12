@@ -18,6 +18,19 @@ Jogo de plataforma e puzzle 2D na Unity. Lia viaja entre o **passado** e o **fut
 | R | reiniciar a fase |
 | Enter | avançar textos |
 
+## Arte da Lia (sprite sheet)
+
+1. Exporte do LibreSprite como **Horizontal Strip** (`lia_walk.png`).
+2. Coloque em `Assets/Resources/Characters/lia_walk.png` (nome exato).
+3. Na Unity, Inspector do PNG:
+   - Texture Type: `Sprite (2D and UI)`
+   - Sprite Mode: `Multiple`
+   - Filter Mode: `Point (no filter)`
+   - Compression: `None`
+   - Pixels Per Unit: tamanho de um frame (ex.: `32`)
+4. Sprite Editor → Slice → Grid By Cell Size (ex.: 32×32) → Apply.
+5. Play: a Lia usa a animação ao andar; sem o arquivo, continua o boneco simples.
+
 ## Criando fases
 
 As fases ficam em `Assets/Scripts/Level/LevelData.cs`, desenhadas em texto (ASCII). A legenda está no comentário de `LevelDefinition`.
