@@ -1,0 +1,25 @@
+CONFIGURAÇÃO — FASE 2: O JARDIM ESQUECIDO
+
+jardim_past_1472x576.png | 1472×576 | pivot Center (0.5,0.5) | opaco | jardim quente e vivo.
+jardim_future_1472x576.png | 1472×576 | pivot Center (0.5,0.5) | opaco | jardim frio e envelhecido.
+soil.png | 32×32 | pivot Center (0.5,0.5) | opaco até as bordas | Terra escura úmida para plantar.
+soil_future.png | 32×32 | pivot Center (0.5,0.5) | opaco até as bordas | Terra seca, fria e rachada.
+floor_garden_past.png | 32×32 | pivot Center (0.5,0.5) | opaco até as bordas | Laje quente com borda baixa de grama e musgo.
+floor_garden_future.png | 32×32 | pivot Center (0.5,0.5) | opaco até as bordas | Laje fria rachada com vegetação morta.
+wall_garden_past.png | 32×32 | pivot Center (0.5,0.5) | opaco até as bordas | Muro quente de pedra com juntas irregulares.
+wall_garden_future.png | 32×32 | pivot Center (0.5,0.5) | opaco até as bordas | Muro frio desgastado e rachado.
+tree_trunk.png | 32×32 | pivot Center (0.5,0.5) | opaco até as bordas | Tile opaco de casca de carvalho, repetição vertical.
+tree_trunk_future.png | 32×32 | pivot Center (0.5,0.5) | opaco até as bordas | Casca fria com sulcos largos, rachaduras e hera seca.
+sapling.png | 32×32 | pivot Bottom Center (0.5,0) | transparente | Muda de carvalho com duas folhas lobadas.
+diary.png | 32×32 | pivot Bottom Center (0.5,0) | transparente | Diário aberto do avô sobre toco, sem letras legíveis.
+plaque.png | 32×32 | pivot Bottom Center (0.5,0) | transparente | Placa de pedra fria com musgo e marcas sem texto legível.
+
+Importação: Sprite (2D and UI), Single, Point, Compression None, mipmaps desativados, Wrap Clamp, Mesh Full Rect. Tiles/props PPU 32. Fundos PPU 128, mesmo Transform e pivot nas duas eras.
+Chão: limite jardim/alicerce em y=426 contado de cima, 150 pixels de alicerce abaixo. Com pivot Center, PPU128 e Scale1, esta linha está 1.078125 unidade abaixo do centro do fundo. Ajuste posição do fundo para coincidir com o piso real.
+Grid: Cell Size (1,1,0), Scale (1,1,1). Tiles opacos preenchendo canvas, sem padding.
+Carvalho jogável: empilhar dois tiles tree_trunk_future verticalmente em células adjacentes, altura total 2 unidades. Topo plano, sem copa ou árvore inteira como sprite. Collider sólido no tronco, ou TilemapCollider2D no Tilemap. Tronco passado é versão alternativa, não ativar plataforma antecipadamente se a mecânica requer muda no passado.
+Muda: aparece após plantar no passado. Futuro: ativar pilha de dois troncos somente se a semente foi plantada. Porta, terraço, Lia, notas e espinhos permanecem objetos existentes do jogo; não fazem parte dos fundos.
+Diário/placa: adicionar trigger de interação separado. Fundo sem collider.
+Validação: 13 PNGs, dimensões e alpha conferidos. Extremidades superior/inferior dos troncos iguais para reduzir emenda vertical. Exportação nearest-neighbor e enquadramento com escala uniforme, sem esticar. Fundos usam mesma composição geral, mas detalhes gerados não são idênticos pixel a pixel. Não testado em Unity. Troncos opacos têm mesma largura de tile; a versão futura sugere espessura por sulcos mais largos.
+
+Fundos revisados seguindo layout da captura: canteiro à esquerda, centro livre e direita discreta atrás do terraço existente. Chão y426, alicerce150px, sem plataforma extra. Enquadramento central por escala uniforme e recorte, sem esticar. Pequenas diferenças de detalhe entre eras permanecem.

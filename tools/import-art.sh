@@ -43,7 +43,9 @@ for pair in \
   "Props/door.png:door.png" \
   "Props/door_open.png:door_open.png" \
   "Props/sapling.png:sapling.png" \
-  "Props/blockade.png:blockade.png"
+  "Props/blockade.png:blockade.png" \
+  "Props/diary.png:diary.png" \
+  "Props/plaque.png:plaque.png"
 do
   dest="${pair%%:*}"; name="${pair##*:}"
   map_copy "$dest" "$name"
@@ -66,7 +68,14 @@ for pair in \
   "Tiles/blocks_tileset.png:blocks_tileset.png" \
   "Tiles/bridge_past.png:bridge_past.png" \
   "Tiles/gate.png:gate.png" \
-  "Tiles/soil.png:soil.png"
+  "Tiles/soil.png:soil.png" \
+  "Tiles/soil_future.png:soil_future.png" \
+  "Tiles/floor_garden_past.png:floor_garden_past.png" \
+  "Tiles/floor_garden_future.png:floor_garden_future.png" \
+  "Tiles/wall_garden_past.png:wall_garden_past.png" \
+  "Tiles/wall_garden_future.png:wall_garden_future.png" \
+  "Tiles/tree_trunk.png:tree_trunk.png" \
+  "Tiles/tree_trunk_future.png:tree_trunk_future.png"
 do
   dest="${pair%%:*}"; name="${pair##*:}"
   map_copy "$dest" "$name"
@@ -89,6 +98,8 @@ map_copy Backgrounds/salao_past.png salao_past.png
 map_copy Backgrounds/salao_future.png salao_future.png
 map_copy Backgrounds/salao_past_1472x576.png salao_past_1472x576.png
 map_copy Backgrounds/salao_future_1472x576.png salao_future_1472x576.png
+map_copy Backgrounds/jardim_past_1472x576.png jardim_past_1472x576.png
+map_copy Backgrounds/jardim_future_1472x576.png jardim_future_1472x576.png
 
 echo
 find "$ROOT/Assets/Resources" -name '*.png' | sort

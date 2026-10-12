@@ -23,11 +23,14 @@ namespace EcoDoTempo
             public int Row, Start, Length;
         }
 
+        static string tileset;
+
         static Vector2 Cell(int col, int row, int height) =>
             new Vector2(col, height - 1 - row + SceneYAlign);
 
         public static BuildResult Build(LevelDefinition level, Transform root)
         {
+            tileset = level.Tileset;
             var result = new BuildResult();
             int height = level.Map.Length;
             int width = 0;
@@ -60,7 +63,9 @@ namespace EcoDoTempo
                             break;
                         case 'f':
                             Block(root, pos, EraPresence.FutureOnly, Palette.FutureBlock, Palette.FutureBlock,
-                                ArtCatalog.PickFutureBlock(pos));
+                                tileset == "garden"
+                                    ? ArtCatalog.FirstExisting("Tiles/wall_garden_future", "Tiles/floor_garden_future", "Tiles/block_stone_future")
+                                    : ArtCatalog.PickFutureBlock(pos));
                             break;
                         case '^': Spikes(root, pos); break;
                         case '@': result.Spawn = pos; break;
@@ -155,7 +160,12 @@ namespace EcoDoTempo
             bool airAbove = !IsSolidChar(CharAt(map, row - 1, col, height));
             string past;
             string future;
-            if (airAbove) ArtCatalog.PickFloorPair(pos, out past, out future);
+            if (tileset == "garden")
+            {
+                if (airAbove) ArtCatalog.PickGardenFloor(out past, out future);
+                else ArtCatalog.PickGardenWall(out past, out future);
+            }
+            else if (airAbove) ArtCatalog.PickFloorPair(pos, out past, out future);
             else ArtCatalog.PickWallPair(pos, out past, out future);
 
             var block = Block(root, pos, EraPresence.Both, Palette.PastWall, Palette.FutureWall, past);
@@ -253,7 +263,8 @@ namespace EcoDoTempo
 
         static char CharAt(string[] map, int row, int col, int height)
         {
-            if (row < 0 || row >= height || col < 0) return '.';
+            if (row < 0) return '#';
+            if (row >= height || col < 0) return '.';
             string line = map[row];
             if (col >= line.Length) return '.';
             return line[col];

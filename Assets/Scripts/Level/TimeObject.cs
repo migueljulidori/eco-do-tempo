@@ -105,7 +105,8 @@ namespace EcoDoTempo
             if (ArtCatalog.TryApply(gameObject, path, art.ArtScale))
             {
                 appliedArt = path;
-                if (Mathf.Abs(art.ArtScale.x - 1f) < 0.01f && Mathf.Abs(art.ArtScale.y - 1f) < 0.01f)
+                if (!path.StartsWith("Props/")
+                    && Mathf.Abs(art.ArtScale.x - 1f) < 0.01f && Mathf.Abs(art.ArtScale.y - 1f) < 0.01f)
                     ArtCatalog.FitToCell(gameObject);
             }
         }

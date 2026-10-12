@@ -36,7 +36,8 @@ namespace EcoDoTempo
         static bool BottomPivotPath(string path) =>
             path == "Props/blockade" || path == "Props/door"
             || path == "Props/door_open" || path == "Props/spikes" || path == "Props/lever"
-            || path == "Props/lever_pulled" || path == "Props/sapling" || path == "Props/inspect";
+            || path == "Props/lever_pulled" || path == "Props/sapling" || path == "Props/inspect"
+            || path == "Props/diary" || path == "Props/plaque";
 
         public static bool Has(string resourcePath) => Get(resourcePath) != null;
 
@@ -71,6 +72,18 @@ namespace EcoDoTempo
             future = alt
                 ? FirstExisting("Tiles/block_stone_future", "Tiles/block_metal_future")
                 : FirstExisting("Tiles/block_metal_future", "Tiles/block_stone_future");
+        }
+
+        public static void PickGardenFloor(out string past, out string future)
+        {
+            past = FirstExisting("Tiles/floor_garden_past", "Tiles/floor_a", "Tiles/block_stone_past");
+            future = FirstExisting("Tiles/floor_garden_future", "Tiles/block_stone_future", "Tiles/floor_garden_past");
+        }
+
+        public static void PickGardenWall(out string past, out string future)
+        {
+            past = FirstExisting("Tiles/wall_garden_past", "Tiles/wall", "Tiles/block_stone_past");
+            future = FirstExisting("Tiles/wall_garden_future", "Tiles/block_stone_future", "Tiles/wall_garden_past");
         }
 
         public static string PickPastBlock(Vector2 pos) =>

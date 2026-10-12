@@ -9,10 +9,13 @@ namespace EcoDoTempo
 
         public static void Create(Transform root, Vector2 pos, InspectNote note)
         {
-            var go = ArtCatalog.Create("Inspectable", root, pos, new Vector2(0.5f, 0.6f),
-                SpriteFactory.Square, Palette.Inspectable, 3, "Props/inspect", Vector2.one * 0.9f);
-            if (ArtCatalog.Has("Props/inspect"))
+            string pastArt = ArtCatalog.Has("Props/diary") ? "Props/diary" : "Props/inspect";
+            string futureArt = ArtCatalog.Has("Props/plaque") ? "Props/plaque" : pastArt;
+            var go = ArtCatalog.Create("Inspectable", root, pos, Vector2.one,
+                SpriteFactory.Square, Palette.Inspectable, 3, pastArt, Vector2.one);
+            if (ArtCatalog.Has(pastArt))
                 ArtCatalog.SnapBottomTo(go, ArtCatalog.FloorTop(pos));
+            ArtCatalog.SetEraArt(go, pastArt, futureArt, Vector2.one);
             go.AddComponent<BoxCollider2D>().isTrigger = true;
             go.AddComponent<Inspectable>().note = note;
             SoftGlow.Attach(go, new Color(1f, 0.92f, 0.55f, 0.6f), 1.15f, 2);

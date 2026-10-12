@@ -13,8 +13,10 @@ namespace EcoDoTempo
 
         public static void Create(Transform root, Vector2 pos)
         {
-            var soil = LevelBuilder.Block(root, pos, EraPresence.Both, Palette.PastSoil, Palette.FutureSoil);
-            ArtCatalog.TryApply(soil.gameObject, "Tiles/soil", Vector2.one);
+            string soilPast = ArtCatalog.FirstExisting("Tiles/soil", "Tiles/floor_garden_past");
+            string soilFuture = ArtCatalog.FirstExisting("Tiles/soil_future", "Tiles/soil", soilPast);
+            var soil = LevelBuilder.Block(root, pos, EraPresence.Both, Palette.PastSoil, Palette.FutureSoil, soilPast);
+            ArtCatalog.SetEraArt(soil.gameObject, soilPast, soilFuture, Vector2.one);
             var spot = soil.gameObject.AddComponent<SeedSpot>();
 
             var saplingGo = ArtCatalog.Create("Sapling", root, pos + Vector2.up, new Vector2(0.25f, 0.5f),
@@ -24,9 +26,11 @@ namespace EcoDoTempo
             spot.sapling = TimeObject.Add(saplingGo, EraPresence.PastOnly, Palette.Sapling, Palette.Sapling, solid: false);
             spot.sapling.ForceHidden = true;
 
+            string trunkArt = ArtCatalog.FirstExisting("Tiles/tree_trunk_future", "Tiles/tree_trunk", "Tiles/block_future");
             for (int i = 0; i < TreeHeight; i++)
             {
-                spot.trunk[i] = LevelBuilder.Block(root, pos + Vector2.up * (i + 1), EraPresence.FutureOnly, Palette.Tree, Palette.Tree);
+                spot.trunk[i] = LevelBuilder.Block(root, pos + Vector2.up * (i + 1), EraPresence.FutureOnly,
+                    Palette.Tree, Palette.Tree, trunkArt);
                 spot.trunk[i].ForceHidden = true;
             }
         }

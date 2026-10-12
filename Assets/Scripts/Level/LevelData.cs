@@ -19,6 +19,8 @@ namespace EcoDoTempo
         public InspectNote[] Notes = new InspectNote[0];
         // Resource key under Resources/Backgrounds/{key}_past and {key}_future.
         public string Background;
+        // "garden" uses the garden floor, wall and soil tiles. Empty keeps the hall set.
+        public string Tileset;
         // Map legend (top row first):
         //  #  wall in both eras          p  block only in the past     f  block only in the future
         //  ^  spikes                     @  player start               D  exit door
@@ -90,6 +92,8 @@ namespace EcoDoTempo
             new LevelDefinition
             {
                 Name = "O Jardim Esquecido",
+                Background = "jardim",
+                Tileset = "garden",
                 Intro = new[]
                 {
                     "O jardim onde o avô passava as tardes. Algumas coisas levam anos para crescer...",
