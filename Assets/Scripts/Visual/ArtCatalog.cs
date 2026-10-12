@@ -35,7 +35,7 @@ namespace EcoDoTempo
             return paths[0];
         }
 
-        // Cycle floors A/B/C by column so the ground never looks like one stamp.
+        // Chaotic mix of floor A/B/C (not a repeating stripe).
         public static string PickFloor(Vector2 pos)
         {
             string[] floors = { "Tiles/floor_a", "Tiles/floor_b", "Tiles/floor_c" };
@@ -45,7 +45,9 @@ namespace EcoDoTempo
 
             if (available == 0) return Pick(pos, "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c");
 
-            int slot = Mathf.Abs((int)pos.x) % available;
+            int h = (int)pos.x * 73856093 ^ (int)pos.y * 19349663;
+            h = (h ^ (h >> 13)) * 1274126177;
+            int slot = Mathf.Abs(h) % available;
             for (int i = 0; i < floors.Length; i++)
             {
                 if (!Has(floors[i])) continue;
@@ -55,8 +57,25 @@ namespace EcoDoTempo
             return floors[0];
         }
 
-        public static string PickWall(Vector2 pos) =>
-            Pick(pos, "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c");
+        public static string PickWall(Vector2 pos)
+        {
+            string[] walls = { "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c" };
+            int available = 0;
+            for (int i = 0; i < walls.Length; i++)
+                if (Has(walls[i])) available++;
+            if (available == 0) return "Tiles/wall";
+
+            int h = (int)pos.x * 83492791 ^ (int)pos.y * 597399067;
+            h = (h ^ (h >> 11)) * 961748941;
+            int slot = Mathf.Abs(h) % available;
+            for (int i = 0; i < walls.Length; i++)
+            {
+                if (!Has(walls[i])) continue;
+                if (slot == 0) return walls[i];
+                slot--;
+            }
+            return walls[0];
+        }
 
         // Replaces the runtime shape with a drawn sprite when available.
         // If worldScale.y <= 0, keeps the sprite aspect (scales by width only).

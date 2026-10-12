@@ -2,15 +2,16 @@ using UnityEngine;
 
 namespace EcoDoTempo
 {
-    // Full-level backdrop from Resources/Backgrounds/{key}_past|_future.
-    // Keeps aspect ratio (no stretch), fits level width, aligns to the floor.
+    // Backdrop from Resources/Backgrounds/{key}_past|_future.
+    // Keeps aspect ratio and aligns the painted ledge with the gameplay floor.
     public class LevelBackground : MonoBehaviour
     {
         SpriteRenderer sr;
         string key;
         Vector2Int levelSize;
+        float floorWorldY;
 
-        public static LevelBackground Create(Transform root, string backgroundKey, Vector2Int size)
+        public static LevelBackground Create(Transform root, string backgroundKey, Vector2Int size, float floorCellY)
         {
             if (string.IsNullOrEmpty(backgroundKey)) return null;
 
@@ -21,6 +22,7 @@ namespace EcoDoTempo
             bg.sr.sortingOrder = -100;
             bg.key = backgroundKey;
             bg.levelSize = size;
+            bg.floorWorldY = floorCellY - 0.5f; // top of the solid floor under the walkway
             bg.Apply(Era.Past);
             return bg;
         }
@@ -38,26 +40,25 @@ namespace EcoDoTempo
             sr.sprite = sprite;
             sr.color = Color.white;
 
-            // Native size in world units at scale 1 (respects Pixels Per Unit).
             float spriteW = Mathf.Max(0.01f, sprite.bounds.size.x);
             float spriteH = Mathf.Max(0.01f, sprite.bounds.size.y);
 
-            // Uniform scale: match level width, never squash the art.
+            // Fit width to the level; never stretch.
             float scale = levelSize.x / spriteW;
             transform.localScale = new Vector3(scale, scale, 1f);
 
             float scaledH = spriteH * scale;
-            // Horizontal center of the map; bottom of the sprite on the level floor line.
             float centerX = (levelSize.x - 1) * 0.5f;
-            float levelBottom = -0.5f;
-            float centerY = levelBottom + scaledH * 0.5f;
+
+            // Painted floor ledge sits ~28% up from the bottom of the plate.
+            const float LedgeFromBottom = 0.28f;
+            float centerY = floorWorldY - (LedgeFromBottom - 0.5f) * scaledH;
             transform.position = new Vector3(centerX, centerY, 0f);
         }
 
         Sprite LoadSprite(Era era)
         {
             string suffix = era == Era.Past ? "past" : "future";
-            // Prefer hi-res 2× plates when present, then standard 736×288.
             return ArtCatalog.Get($"Backgrounds/{key}_{suffix}_1472x576")
                 ?? ArtCatalog.Get($"Backgrounds/{key}_{suffix}")
                 ?? ArtCatalog.Get($"Backgrounds/{key}")
