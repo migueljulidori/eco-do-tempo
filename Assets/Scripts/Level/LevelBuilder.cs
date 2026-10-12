@@ -277,14 +277,28 @@ namespace EcoDoTempo
 
         static void Spikes(Transform root, Vector2 pos)
         {
+            const float lift = 0.42f;
             var go = ArtCatalog.Create("Spikes", root, pos, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes, 4,
                 "Props/spikes", Vector2.one);
+            float floor = pos.y - 0.5f;
             if (ArtCatalog.Has("Props/spikes"))
-                ArtCatalog.SnapBottomTo(go, pos.y - 0.5f, lift: 0f);
+                ArtCatalog.SnapBottomTo(go, floor, lift: lift);
+            else
+                go.transform.position += Vector3.up * lift;
+
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
-            col.size = new Vector2(0.9f, 0.5f);
-            col.offset = new Vector2(0f, 0f);
+            var sr = go.GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+            {
+                col.size = new Vector2(0.9f, Mathf.Max(0.55f, sr.bounds.size.y));
+                col.offset = new Vector2(0f, sr.bounds.center.y - go.transform.position.y);
+            }
+            else
+            {
+                col.size = new Vector2(0.9f, 0.7f);
+                col.offset = new Vector2(0f, lift * 0.5f);
+            }
             go.AddComponent<Hazard>();
             ArtCatalog.SetEraArt(go, "Props/spikes", "Props/spikes", Vector2.one);
             TimeObject.Add(go, EraPresence.Both, Palette.PastSpikes, Palette.FutureSpikes, solid: false);
