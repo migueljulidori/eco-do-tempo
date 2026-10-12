@@ -7,10 +7,10 @@ namespace EcoDoTempo
     {
         InspectNote note;
 
-        public static void Create(Transform root, Vector2 pos, InspectNote note)
+        public static void Create(Transform root, Vector2 pos, InspectNote note, bool gardenProps = false)
         {
-            string pastArt = ArtCatalog.Has("Props/diary") ? "Props/diary" : "Props/inspect";
-            string futureArt = ArtCatalog.Has("Props/plaque") ? "Props/plaque" : pastArt;
+            string pastArt = gardenProps && ArtCatalog.Has("Props/diary") ? "Props/diary" : "Props/inspect";
+            string futureArt = gardenProps && ArtCatalog.Has("Props/plaque") ? "Props/plaque" : pastArt;
             var go = ArtCatalog.Create("Inspectable", root, pos, Vector2.one,
                 SpriteFactory.Square, Palette.Inspectable, 3, pastArt, Vector2.one);
             if (ArtCatalog.Has(pastArt))

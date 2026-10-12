@@ -81,7 +81,7 @@ namespace EcoDoTempo
                                 ? level.Notes[noteIndex]
                                 : new InspectNote("Nada de especial.", "Nada de especial.");
                             noteIndex++;
-                            Inspectable.Create(root, pos, note);
+                            Inspectable.Create(root, pos, note, tileset == "garden");
                             break;
                     }
                 }
