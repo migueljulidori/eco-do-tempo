@@ -50,7 +50,8 @@ namespace EcoDoTempo
         {
             var go = new GameObject("Lia");
             go.transform.SetParent(parent, false);
-            go.transform.position = spawn;
+            // Spawn a bit above the cell center so physics settles on the floor lip.
+            go.transform.position = spawn + Vector2.up * 0.08f;
 
             var visual = SpriteFactory.CreateObject("Body", go.transform, spawn, BodySize, SpriteFactory.Square, Palette.Player, 10);
             visual.transform.localPosition = Vector3.zero;
@@ -70,19 +71,21 @@ namespace EcoDoTempo
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             var body = go.AddComponent<BoxCollider2D>();
-            body.size = BodySize - Vector2.one * 0.04f;
-            body.edgeRadius = 0.02f;
+            // Slightly shorter collider so the sprite can sit above the floor without clipping.
+            body.size = new Vector2(BodySize.x - 0.04f, BodySize.y - 0.12f);
+            body.offset = new Vector2(0f, -0.02f);
+            body.edgeRadius = 0.01f;
             body.sharedMaterial = new PhysicsMaterial2D("NoFriction") { friction = 0f, bounciness = 0f };
 
-            // Keep pixel-art feet on the collider bottom (slight lift so toes clear the floor lip).
+            // Align sprite feet above the collider bottom / floor contact.
             if (anim != null)
             {
                 var sr = visual.GetComponent<SpriteRenderer>();
                 if (sr != null && sr.sprite != null)
                 {
-                    float colliderBottom = -body.size.y * 0.5f;
+                    float colliderBottom = body.offset.y - body.size.y * 0.5f;
                     float spriteBottom = sr.sprite.bounds.min.y * visual.transform.localScale.y;
-                    visual.transform.localPosition = new Vector3(0f, colliderBottom - spriteBottom + 0.1f, 0f);
+                    visual.transform.localPosition = new Vector3(0f, colliderBottom - spriteBottom + ArtCatalog.FloorClearance, 0f);
                 }
             }
 

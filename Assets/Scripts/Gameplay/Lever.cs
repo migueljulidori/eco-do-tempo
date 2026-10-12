@@ -38,7 +38,7 @@ namespace EcoDoTempo
             if (ArtCatalog.Has("Props/lever_pulled"))
             {
                 ArtCatalog.TryApply(gameObject, "Props/lever_pulled", Vector2.one * 0.9f);
-                ArtCatalog.SnapBottomTo(gameObject, ArtCatalog.FloorTop(transform.position + Vector3.up * 0.5f));
+                ArtCatalog.SnapBottomTo(gameObject, ArtCatalog.FloorTop(cell));
             }
             else if (!ArtCatalog.Has("Props/lever"))
                 transform.rotation = Quaternion.Euler(0f, 0f, -30f);

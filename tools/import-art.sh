@@ -58,12 +58,21 @@ for pair in \
   "Tiles/floor_c.png:floor_c.png" \
   "Tiles/block_past.png:block_past.png" \
   "Tiles/block_future.png:block_future.png" \
+  "Tiles/block_wood_past.png:block_wood_past.png" \
+  "Tiles/block_wood_future.png:block_wood_future.png" \
+  "Tiles/block_stone_past.png:block_stone_past.png" \
+  "Tiles/block_stone_future.png:block_stone_future.png" \
+  "Tiles/block_metal_past.png:block_metal_past.png" \
+  "Tiles/block_metal_future.png:block_metal_future.png" \
+  "Tiles/blocks_tileset.png:blocks_tileset.png" \
+  "Tiles/bridge_past.png:bridge_past.png" \
   "Tiles/gate.png:gate.png" \
   "Tiles/soil.png:soil.png"
 do
   dest="${pair%%:*}"; name="${pair##*:}"
   map_copy "$dest" "$name"
 done
+map_copy Props/blockade.png blockade.png
 echo "== UI =="
 map_copy UI/fragment_ui.png fragment_ui.png
 echo "== Backgrounds =="

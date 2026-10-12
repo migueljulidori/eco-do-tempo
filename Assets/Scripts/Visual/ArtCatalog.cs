@@ -35,47 +35,26 @@ namespace EcoDoTempo
             return paths[0];
         }
 
-        // Chaotic mix of floor A/B/C (not a repeating stripe).
+        // Chaotic mix of floor slabs + stone blocks (not a repeating stripe).
         public static string PickFloor(Vector2 pos)
         {
-            string[] floors = { "Tiles/floor_a", "Tiles/floor_b", "Tiles/floor_c" };
-            int available = 0;
-            for (int i = 0; i < floors.Length; i++)
-                if (Has(floors[i])) available++;
-
-            if (available == 0) return Pick(pos, "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c");
-
-            int h = (int)pos.x * 73856093 ^ (int)pos.y * 19349663;
-            h = (h ^ (h >> 13)) * 1274126177;
-            int slot = Mathf.Abs(h) % available;
-            for (int i = 0; i < floors.Length; i++)
-            {
-                if (!Has(floors[i])) continue;
-                if (slot == 0) return floors[i];
-                slot--;
-            }
-            return floors[0];
+            return Pick(pos,
+                "Tiles/block_stone_past", "Tiles/floor_a", "Tiles/floor_b", "Tiles/floor_c",
+                "Tiles/block_metal_past", "Tiles/wall_b");
         }
 
         public static string PickWall(Vector2 pos)
         {
-            string[] walls = { "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c" };
-            int available = 0;
-            for (int i = 0; i < walls.Length; i++)
-                if (Has(walls[i])) available++;
-            if (available == 0) return "Tiles/wall";
-
-            int h = (int)pos.x * 83492791 ^ (int)pos.y * 597399067;
-            h = (h ^ (h >> 11)) * 961748941;
-            int slot = Mathf.Abs(h) % available;
-            for (int i = 0; i < walls.Length; i++)
-            {
-                if (!Has(walls[i])) continue;
-                if (slot == 0) return walls[i];
-                slot--;
-            }
-            return walls[0];
+            return Pick(pos,
+                "Tiles/block_stone_past", "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c",
+                "Tiles/block_metal_past");
         }
+
+        public static string PickPastBlock(Vector2 pos) =>
+            Pick(pos, "Tiles/block_wood_past", "Tiles/block_past", "Tiles/bridge_past");
+
+        public static string PickFutureBlock(Vector2 pos) =>
+            Pick(pos, "Tiles/block_wood_future", "Tiles/block_stone_future", "Tiles/block_metal_future", "Tiles/block_future");
 
         // Replaces the runtime shape with a drawn sprite when available.
         // If worldScale.y <= 0, keeps the sprite aspect (scales by width only).
@@ -110,8 +89,11 @@ namespace EcoDoTempo
 
         // Works with Center or Bottom pivots: rests the sprite bottom on floorTopY.
         // lift keeps feet/props above the tile lip so they don't sink into the floor art.
-        public static void SnapBottomTo(GameObject go, float floorTopY, float lift = 0.1f)
+        public const float FloorClearance = 0.22f;
+
+        public static void SnapBottomTo(GameObject go, float floorTopY, float lift = -1f)
         {
+            if (lift < 0f) lift = FloorClearance;
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr == null || sr.sprite == null) return;
             float dy = floorTopY + lift - sr.bounds.min.y;
