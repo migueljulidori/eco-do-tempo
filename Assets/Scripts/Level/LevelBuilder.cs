@@ -101,7 +101,9 @@ namespace EcoDoTempo
             return spans;
         }
 
-        // Same 1×1 grid placement as stone floors — cannot sink relative to the ledge.
+        // Nudge so the wood deck sits flush with the stone lip (art reads a bit low otherwise).
+        const float BridgeYNudge = 0.38f;
+
         static void PlaceBridgeSpans(List<BridgeSpan> spans, Transform root, int height)
         {
             string plankArt = ArtCatalog.FirstExisting(
@@ -109,20 +111,18 @@ namespace EcoDoTempo
 
             foreach (var span in spans)
             {
-                float worldY = height - 1 - span.Row;
+                float worldY = height - 1 - span.Row + BridgeYNudge;
                 float centerX = span.Start + (span.Length - 1) * 0.5f;
 
                 for (int i = 0; i < span.Length; i++)
                 {
                     int x = span.Start + i;
-                    // Identical to stone: transform + collider on the grid cell.
                     var plank = PlaceGridTile(root, new Vector2(x, worldY), plankArt,
                         EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock);
                     var sr = plank.GetComponent<SpriteRenderer>();
                     if (sr != null) sr.sortingOrder = 1;
                 }
 
-                // Optional long strip on top (same cell Y / height 1). Harmless if missing.
                 if (ArtCatalog.Has("Tiles/bridge_plank"))
                 {
                     var strip = SpriteFactory.CreateObject("BridgeStrip", root,
@@ -140,10 +140,6 @@ namespace EcoDoTempo
                         Object.Destroy(strip);
                     }
                 }
-
-                Debug.Log(
-                    $"[Eco do Tempo] bridge-v5-plank: x={span.Start}..{span.Start + span.Length - 1} " +
-                    $"y={worldY:0.00} art={plankArt}");
             }
         }
 
