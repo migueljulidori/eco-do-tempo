@@ -13,6 +13,11 @@ namespace EcoDoTempo
     // Turns the ASCII maps in LevelData into GameObjects. One map cell = one world unit.
     public static class LevelBuilder
     {
+        struct BridgeSpan
+        {
+            public int Row, Start, Length;
+        }
+
         public static BuildResult Build(LevelDefinition level, Transform root)
         {
             var result = new BuildResult();
@@ -22,7 +27,7 @@ namespace EcoDoTempo
             result.Size = new Vector2Int(width, height);
 
             var claimed = new HashSet<Vector2Int>();
-            PlaceBridgeRuns(level.Map, root, height, claimed);
+            var spans = FindBridgeSpans(level.Map, height, claimed);
             PlaceCratePiles(level.Map, root, height, claimed);
 
             int noteIndex = 0;
@@ -43,7 +48,6 @@ namespace EcoDoTempo
                             PlaceSolid(root, pos, level.Map, row, col, height);
                             break;
                         case 'p':
-                            // Lone past block → wood crate.
                             PlaceCrate(root, pos);
                             break;
                         case 'f':
@@ -69,7 +73,106 @@ namespace EcoDoTempo
                     }
                 }
             }
+
+            // Bridges last — stone neighbors already exist so we can copy their ledge height.
+            PlaceBridgeSpans(spans, root, height);
             return result;
+        }
+
+        static List<BridgeSpan> FindBridgeSpans(string[] map, int height, HashSet<Vector2Int> claimed)
+        {
+            var spans = new List<BridgeSpan>();
+            for (int row = 0; row < height; row++)
+            {
+                string line = map[row];
+                int col = 0;
+                while (col < line.Length)
+                {
+                    if (line[col] != 'p') { col++; continue; }
+                    int start = col;
+                    while (col < line.Length && line[col] == 'p') col++;
+                    int length = col - start;
+                    if (length < 3) continue;
+
+                    spans.Add(new BridgeSpan { Row = row, Start = start, Length = length });
+                    for (int x = start; x < start + length; x++)
+                        claimed.Add(new Vector2Int(x, row));
+                }
+            }
+            return spans;
+        }
+
+        static void PlaceBridgeSpans(List<BridgeSpan> spans, Transform root, int height)
+        {
+            foreach (var span in spans)
+            {
+                float worldY = height - 1 - span.Row;
+                float fallbackTop = worldY + 0.5f;
+                float ledgeTop = SampleLedgeTop(root, span.Start - 1, worldY, fallbackTop);
+                if (Mathf.Abs(ledgeTop - fallbackTop) < 0.01f)
+                    ledgeTop = SampleLedgeTop(root, span.Start + span.Length, worldY, fallbackTop);
+
+                float centerX = span.Start + (span.Length - 1) * 0.5f;
+                var supportTransforms = new Transform[span.Length];
+
+                for (int i = 0; i < span.Length; i++)
+                {
+                    int x = span.Start + i;
+                    var support = new GameObject("BridgeSupport");
+                    support.transform.SetParent(root, false);
+                    support.transform.position = new Vector3(x, ledgeTop - 0.5f, 0f);
+                    support.AddComponent<BoxCollider2D>().size = Vector2.one;
+                    TimeObject.Add(support, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: true);
+                    supportTransforms[i] = support.transform;
+                }
+
+                var bridge = SpriteFactory.CreateObject("Bridge", root,
+                    new Vector2(centerX, ledgeTop - 0.5f), new Vector2(span.Length, 1f),
+                    SpriteFactory.Square, Palette.PastBlock, 2);
+                ArtCatalog.TryApplyBridge(bridge, span.Length);
+                bridge.transform.position = new Vector3(centerX, ledgeTop - 0.5f, 0f);
+
+                var marker = bridge.GetComponent<ArtSpriteMarker>() ?? bridge.AddComponent<ArtSpriteMarker>();
+                marker.PastArt = "Tiles/bridge_deck";
+                marker.FutureArt = "Tiles/bridge_deck";
+                marker.ArtScale = new Vector2(span.Length, 1f);
+
+                var anchor = bridge.AddComponent<BridgeAnchor>();
+                anchor.LedgeTop = ledgeTop;
+                anchor.Supports = supportTransforms;
+
+                TimeObject.Add(bridge, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
+                anchor.Align();
+
+                Debug.Log(
+                    $"[Eco do Tempo] {BridgeAnchor.Version}: vão x={span.Start}..{span.Start + span.Length - 1} " +
+                    $"ledgeTop={ledgeTop:0.000} (fallback={fallbackTop:0.000})");
+            }
+        }
+
+        // Read the real top of a placed stone block at grid x / worldY.
+        static float SampleLedgeTop(Transform root, int gridX, float worldY, float fallback)
+        {
+            if (root == null) return fallback;
+            float best = float.NaN;
+            float bestDist = float.MaxValue;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                var child = root.GetChild(i);
+                if (child.name != "Block") continue;
+                var sr = child.GetComponent<SpriteRenderer>();
+                if (sr == null || sr.sprite == null || !sr.enabled) continue;
+                float dx = Mathf.Abs(child.position.x - gridX);
+                float dy = Mathf.Abs(child.position.y - worldY);
+                if (dx > 0.6f || dy > 0.6f) continue;
+                float d = dx + dy;
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = sr.bounds.max.y;
+                }
+            }
+            return float.IsNaN(best) ? fallback : best;
         }
 
         static void PlaceSolid(Transform root, Vector2 pos, string[] map, int row, int col, int height)
@@ -84,63 +187,10 @@ namespace EcoDoTempo
             ArtCatalog.SetEraArt(block.gameObject, past, future, Vector2.one);
         }
 
-        // Horizontal 'p' runs (3+) → real bridge_past (cropped) + solid colliders flush with stone.
-        static void PlaceBridgeRuns(string[] map, Transform root, int height, HashSet<Vector2Int> claimed)
-        {
-            for (int row = 0; row < height; row++)
-            {
-                string line = map[row];
-                int col = 0;
-                while (col < line.Length)
-                {
-                    if (line[col] != 'p') { col++; continue; }
-                    int start = col;
-                    while (col < line.Length && line[col] == 'p') col++;
-                    int length = col - start;
-                    if (length < 3) continue;
-
-                    float worldY = height - 1 - row;
-                    float ledgeTop = worldY + 0.5f;
-                    float centerX = start + (length - 1) * 0.5f;
-                    var supports = new GameObject[length];
-
-                    for (int i = 0; i < length; i++)
-                    {
-                        int x = start + i;
-                        claimed.Add(new Vector2Int(x, row));
-                        var support = new GameObject("BridgeSupport");
-                        support.transform.SetParent(root, false);
-                        support.transform.position = new Vector3(x, worldY, 0f);
-                        support.AddComponent<BoxCollider2D>().size = Vector2.one;
-                        TimeObject.Add(support, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: true);
-                        supports[i] = support;
-                    }
-
-                    if (ArtCatalog.GetBridgeSprite() != null)
-                    {
-                        var bridge = SpriteFactory.CreateObject("Bridge", root,
-                            new Vector2(centerX, worldY), Vector2.one, SpriteFactory.Square, Palette.PastBlock, 2);
-                        ArtCatalog.TryApplyBridge(bridge, length);
-                        bridge.transform.position = new Vector3(centerX, worldY, 0f);
-                        var marker = bridge.GetComponent<ArtSpriteMarker>();
-                        if (marker == null) marker = bridge.AddComponent<ArtSpriteMarker>();
-                        marker.PastArt = "Tiles/bridge_deck";
-                        marker.FutureArt = "Tiles/bridge_deck";
-                        marker.ArtScale = new Vector2(length, 1f);
-                        TimeObject.Add(bridge, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
-                        // Deck + colliders locked to the stone ledge (not the pit).
-                        ArtCatalog.AlignBridgeToLedge(bridge, supports, ledgeTop);
-                    }
-                }
-            }
-        }
-
-        // Compact clusters of 'p' (2+ tall) → pile of wood crates that actually blocks the path.
         static void PlaceCratePiles(string[] map, Transform root, int height, HashSet<Vector2Int> claimed)
         {
             int width = 0;
             foreach (var line in map) width = Mathf.Max(width, line.Length);
-
             var visited = new HashSet<Vector2Int>();
 
             for (int row = 0; row < height; row++)
@@ -151,7 +201,6 @@ namespace EcoDoTempo
                     if (claimed.Contains(key) || visited.Contains(key)) continue;
                     if (CharAt(map, row, col, height) != 'p') continue;
 
-                    // Flood-fill this connected past-block blob.
                     var cells = new List<Vector2Int>();
                     var stack = new Stack<Vector2Int>();
                     stack.Push(key);
@@ -179,17 +228,13 @@ namespace EcoDoTempo
                     }
 
                     if (cells.Count == 0) continue;
-
                     int minY = int.MaxValue, maxY = int.MinValue;
                     foreach (var c in cells)
                     {
                         if (c.y < minY) minY = c.y;
                         if (c.y > maxY) maxY = c.y;
                     }
-                    int stackHeight = maxY - minY + 1;
-
-                    // Single cells / short rows stay for the main loop; only real piles here.
-                    if (cells.Count < 2 || stackHeight < 2) continue;
+                    if (cells.Count < 2 || maxY - minY + 1 < 2) continue;
 
                     foreach (var c in cells)
                     {
@@ -217,22 +262,37 @@ namespace EcoDoTempo
             return block;
         }
 
-        // 1×1 tile locked to the grid — same transform as stone floors.
         static TimeObject PlaceGridTile(Transform root, Vector2 pos, string art, EraPresence presence,
             Color past, Color future)
         {
             var go = SpriteFactory.CreateObject("Block", root, pos, Vector2.one, SpriteFactory.Square, past, 0);
             go.transform.position = new Vector3(pos.x, pos.y, 0f);
             go.transform.localScale = Vector3.one;
+            // Collider first, anchored to the grid cell — never follows sprite pivot drift.
+            go.AddComponent<BoxCollider2D>().size = Vector2.one;
             if (!string.IsNullOrEmpty(art) && ArtCatalog.Has(art))
             {
                 ArtCatalog.TryApply(go, art, Vector2.one);
-                // Re-lock after TryApply (some pivots/PPU combos drift).
                 go.transform.position = new Vector3(pos.x, pos.y, 0f);
                 ArtCatalog.FitToCell(go);
+                // Keep collider on the grid even if FitToCell nudged the visual transform.
+                go.transform.position = new Vector3(pos.x, pos.y, 0f);
                 ArtCatalog.SetEraArt(go, art, art, Vector2.one);
+
+                // Visual-only child offset if pivot made bounds drift (parent stays on grid).
+                var sr = go.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite != null)
+                {
+                    Vector3 delta = new Vector3(pos.x, pos.y, 0f) - sr.bounds.center;
+                    if (delta.sqrMagnitude > 0.0001f)
+                        go.transform.position += delta;
+                    // Parent must stay for physics — move renderer via a child instead.
+                    // Simpler: accept FitToCell move only for visuals by restoring collider offset.
+                }
             }
-            go.AddComponent<BoxCollider2D>().size = Vector2.one;
+            // Hard lock transform to grid for gameplay. Sprite may clip slightly if pivot is weird;
+            // bridge uses BridgeAnchor instead.
+            go.transform.position = new Vector3(pos.x, pos.y, 0f);
             return TimeObject.Add(go, presence, past, future, solid: true);
         }
 

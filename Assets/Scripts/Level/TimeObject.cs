@@ -89,6 +89,8 @@ namespace EcoDoTempo
             {
                 if (ArtCatalog.TryApplyBridge(gameObject, art.ArtScale.x))
                     appliedArt = path;
+                var anchor = GetComponent<BridgeAnchor>();
+                if (anchor != null) anchor.Align();
                 return;
             }
 

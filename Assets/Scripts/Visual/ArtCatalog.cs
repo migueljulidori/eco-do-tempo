@@ -101,7 +101,7 @@ namespace EcoDoTempo
             return true;
         }
 
-        // Fill exactly one grid cell and center the sprite on the transform position.
+        // Scale sprite to fill one cell. Transform stays on the grid center (collider anchor).
         public static void FitToCell(GameObject go, float cell = 1f)
         {
             var sr = go.GetComponent<SpriteRenderer>();
@@ -111,9 +111,12 @@ namespace EcoDoTempo
             float nativeW = Mathf.Max(0.01f, sr.sprite.bounds.size.x);
             float nativeH = Mathf.Max(0.01f, sr.sprite.bounds.size.y);
             go.transform.localScale = new Vector3(cell / nativeW, cell / nativeH, 1f);
+            go.transform.position = cellCenter;
 
+            // If import pivot isn't center, nudge so the drawn bounds sit on the cell.
             Vector3 delta = cellCenter - sr.bounds.center;
-            go.transform.position += delta;
+            if (delta.sqrMagnitude > 0.0001f)
+                go.transform.position += delta;
         }
 
         public static ArtSpriteMarker SetEraArt(GameObject go, string past, string future, Vector2 scale)
