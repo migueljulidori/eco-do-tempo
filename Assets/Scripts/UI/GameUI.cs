@@ -1,0 +1,161 @@
+using UnityEngine;
+
+namespace EcoDoTempo
+{
+    // Immediate-mode UI, designed for a 1280x720 virtual screen and scaled to fit.
+    public class GameUI : MonoBehaviour
+    {
+        const float VirtualHeight = 720f;
+
+        GUIStyle title, subtitle, body, small, center, eraLabel, prompt, message, heading;
+        Texture2D white;
+        float width;
+
+        void InitStyles()
+        {
+            if (title != null) return;
+            white = Texture2D.whiteTexture;
+            title = new GUIStyle(GUI.skin.label) { fontSize = 72, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
+            subtitle = new GUIStyle(title) { fontSize = 26, fontStyle = FontStyle.Italic };
+            body = new GUIStyle(GUI.skin.label) { fontSize = 26, wordWrap = true, alignment = TextAnchor.MiddleCenter };
+            small = new GUIStyle(GUI.skin.label) { fontSize = 18 };
+            center = new GUIStyle(small) { alignment = TextAnchor.MiddleCenter };
+            eraLabel = new GUIStyle(small) { fontSize = 26, fontStyle = FontStyle.Bold };
+            prompt = new GUIStyle(center) { fontSize = 24 };
+            message = new GUIStyle(body) { fontSize = 20 };
+            heading = new GUIStyle(title) { fontSize = 42 };
+            foreach (var s in new[] { title, subtitle, body, small, center, eraLabel, prompt, message, heading })
+                s.normal.textColor = Color.white;
+        }
+
+        void OnGUI()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            InitStyles();
+
+            float scale = Screen.height / VirtualHeight;
+            width = Screen.width / scale;
+            GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
+
+            switch (gm.State)
+            {
+                case GameState.Title: DrawTitle(); break;
+                case GameState.Story: DrawStory(gm); break;
+                case GameState.Playing: DrawHud(gm); break;
+                case GameState.Inspecting: DrawHud(gm); DrawInspect(gm); break;
+                case GameState.LevelComplete: DrawHud(gm); DrawLevelComplete(gm); break;
+                case GameState.Ending: DrawEnding(gm); break;
+            }
+        }
+
+        void DrawTitle()
+        {
+            Fill(new Rect(0, 0, width, VirtualHeight), new Color(0, 0, 0, 0.6f));
+            float pulse = 0.6f + 0.4f * Mathf.Sin(Time.time * 2f);
+            Label(new Rect(0, 200, width, 100), "ECO DO TEMPO", title, Color.Lerp(Palette.PastBlock, Palette.FutureBlock, Mathf.PingPong(Time.time * 0.3f, 1f)));
+            Label(new Rect(0, 300, width, 40), "Um quebra-cabeça entre passado e futuro", subtitle, Color.white);
+            Label(new Rect(0, 480, width, 40), "Pressione ENTER para começar", body, new Color(1, 1, 1, pulse));
+        }
+
+        void DrawStory(GameManager gm)
+        {
+            Fill(new Rect(0, 0, width, VirtualHeight), new Color(0, 0, 0, 0.85f));
+            int page = Mathf.Min(gm.StoryPage, gm.StoryPages.Length - 1);
+            Label(new Rect(width * 0.15f, 160, width * 0.7f, 360), gm.StoryPages[page], body, Color.white);
+            Label(new Rect(0, 600, width, 30), $"{page + 1}/{gm.StoryPages.Length}     ENTER para continuar", center, new Color(1, 1, 1, 0.7f));
+        }
+
+        void DrawHud(GameManager gm)
+        {
+            var eraColor = gm.CurrentEra == Era.Past ? Palette.PastBlock : Palette.FutureBlock;
+
+            Fill(new Rect(10, 10, 360, 96), new Color(0, 0, 0, 0.45f));
+            Label(new Rect(22, 14, 340, 26), $"Fase {gm.LevelIndex + 1}: {gm.Level.Name}", small, Color.white);
+            Label(new Rect(22, 40, 340, 30), gm.CurrentEra.DisplayName(), eraLabel, eraColor);
+            Label(new Rect(22, 74, 340, 26), $"Fragmentos: {gm.FragmentsCollected}/{gm.FragmentsTotal}", small, Palette.Fragment);
+
+            DrawMelody(gm);
+
+            if (gm.Level.AutoSwitchInterval > 0f)
+            {
+                var bar = new Rect(width * 0.5f - 200, 20, 400, 14);
+                Fill(bar, new Color(0, 0, 0, 0.5f));
+                Fill(new Rect(bar.x, bar.y, bar.width * gm.AutoSwitchProgress, bar.height), eraColor);
+                Label(new Rect(bar.x, bar.yMax + 2, bar.width, 22), "ritmo do tempo", center, new Color(1, 1, 1, 0.6f));
+            }
+
+            if (gm.Player != null && gm.Player.Nearby != null && gm.State == GameState.Playing)
+                Label(new Rect(0, VirtualHeight - 120, width, 30), gm.Player.Nearby.Prompt(gm.CurrentEra),
+                    prompt, Color.white);
+
+            if (gm.MessageAlpha > 0f)
+            {
+                var rect = new Rect(width * 0.2f, 130, width * 0.6f, 60);
+                Fill(rect, new Color(0, 0, 0, 0.55f * gm.MessageAlpha));
+                Label(rect, gm.Message, message, new Color(1, 1, 1, gm.MessageAlpha));
+            }
+
+            string controls = gm.Level.AutoSwitchInterval > 0f
+                ? "A/D mover   ESPAÇO pular   E interagir   R reiniciar   (Q desativado nesta fase)"
+                : "A/D mover   ESPAÇO pular   Q alternar tempo   E interagir   R reiniciar";
+            Label(new Rect(0, VirtualHeight - 36, width, 28), controls, center, new Color(1, 1, 1, 0.6f));
+        }
+
+        void DrawMelody(GameManager gm)
+        {
+            int total = LevelData.MelodyLength;
+            float size = 18f, gap = 6f;
+            float x = width - 20 - total * (size + gap);
+            Fill(new Rect(x - 10, 10, total * (size + gap) + 14, 56), new Color(0, 0, 0, 0.45f));
+            Label(new Rect(x, 12, 300, 22), "Canção do Eco", small, Color.white);
+            for (int i = 0; i < total; i++)
+            {
+                var color = gm.CollectedNotes.Contains(i) ? Palette.Fragment : new Color(1, 1, 1, 0.15f);
+                Fill(new Rect(x + i * (size + gap), 38, size, size), color);
+            }
+        }
+
+        void DrawInspect(GameManager gm)
+        {
+            var rect = new Rect(width * 0.2f, 220, width * 0.6f, 260);
+            Fill(rect, new Color(0.05f, 0.04f, 0.03f, 0.92f));
+            Label(new Rect(rect.x + 30, rect.y + 20, rect.width - 60, rect.height - 70), gm.InspectText, body, Color.white);
+            Label(new Rect(rect.x, rect.yMax - 44, rect.width, 30), "E ou ENTER para fechar", center, new Color(1, 1, 1, 0.6f));
+        }
+
+        void DrawLevelComplete(GameManager gm)
+        {
+            var rect = new Rect(width * 0.25f, 240, width * 0.5f, 220);
+            Fill(rect, new Color(0, 0, 0, 0.85f));
+            Label(new Rect(rect.x, rect.y + 30, rect.width, 60), "Fase concluída!", heading, Palette.DoorOpen);
+            Label(new Rect(rect.x, rect.y + 100, rect.width, 40), $"A melodia cresce: {gm.CollectedNotes.Count}/{LevelData.MelodyLength} notas", body, Color.white);
+            Label(new Rect(rect.x, rect.yMax - 50, rect.width, 30), "ENTER para continuar", center, new Color(1, 1, 1, 0.7f));
+        }
+
+        void DrawEnding(GameManager gm)
+        {
+            Fill(new Rect(0, 0, width, VirtualHeight), new Color(0, 0, 0, 0.9f));
+            Label(new Rect(0, 200, width, 100), "ECO DO TEMPO", title, Palette.DoorOpen);
+            Label(new Rect(0, 310, width, 40), $"Notas recuperadas: {gm.CollectedNotes.Count}/{LevelData.MelodyLength}", body, Color.white);
+            Label(new Rect(0, 360, width, 40), "Obrigado por jogar!", subtitle, Color.white);
+            Label(new Rect(0, 520, width, 40), "ENTER para voltar ao início", body, new Color(1, 1, 1, 0.7f));
+        }
+
+        void Fill(Rect rect, Color color)
+        {
+            var old = GUI.color;
+            GUI.color = color;
+            GUI.DrawTexture(rect, white);
+            GUI.color = old;
+        }
+
+        static void Label(Rect rect, string text, GUIStyle style, Color color)
+        {
+            var old = style.normal.textColor;
+            style.normal.textColor = color;
+            GUI.Label(rect, text, style);
+            style.normal.textColor = old;
+        }
+    }
+}
