@@ -54,9 +54,13 @@ namespace EcoDoTempo
             if (sr != null)
             {
                 sr.enabled = !ForceHidden;
-                var color = Presence == EraPresence.PastOnly ? PastColor
-                          : Presence == EraPresence.FutureOnly ? FutureColor
-                          : era == Era.Past ? PastColor : FutureColor;
+                // Drawn sprites keep their own colors; geometric placeholders still use the palette.
+                bool art = GetComponent<ArtSpriteMarker>() != null;
+                var color = art
+                    ? Color.white
+                    : Presence == EraPresence.PastOnly ? PastColor
+                    : Presence == EraPresence.FutureOnly ? FutureColor
+                    : era == Era.Past ? PastColor : FutureColor;
                 if (!present) color.a *= GhostAlpha;
                 else if (ForceIntangible) color.a *= IntangibleAlpha;
                 sr.color = color;

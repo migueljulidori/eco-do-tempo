@@ -26,6 +26,8 @@ namespace EcoDoTempo
             sr.sprite = sprite;
             sr.color = Color.white;
             go.transform.localScale = new Vector3(worldScale.x, worldScale.y, 1f);
+            if (go.GetComponent<ArtSpriteMarker>() == null)
+                go.AddComponent<ArtSpriteMarker>();
             return true;
         }
 
