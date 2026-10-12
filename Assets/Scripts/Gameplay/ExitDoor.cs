@@ -12,13 +12,15 @@ namespace EcoDoTempo
 
         public static void Create(Transform root, Vector2 pos)
         {
-            // y <= 0 => keep door art aspect ratio (no vertical stretch).
-            var go = ArtCatalog.Create("Door", root, pos + Vector2.up * 0.45f, new Vector2(0.9f, 1.9f),
-                SpriteFactory.Square, Palette.DoorLocked, 1, "Props/door", new Vector2(1.1f, 0f));
+            // Bottom-center pivot on the cell floor; y<=0 keeps art aspect (no stretch).
+            bool art = ArtCatalog.Has("Props/door") || ArtCatalog.Has("Props/door_open");
+            var place = art ? ArtCatalog.FloorPos(pos) : pos + Vector2.up * 0.45f;
+            var go = ArtCatalog.Create("Door", root, place, new Vector2(0.9f, 1.9f),
+                SpriteFactory.Square, Palette.DoorLocked, 3, "Props/door", new Vector2(1.5f, 0f));
             go.AddComponent<BoxCollider2D>().isTrigger = true;
             var door = go.AddComponent<ExitDoor>();
             door.sr = go.GetComponent<SpriteRenderer>();
-            door.useArt = ArtCatalog.Has("Props/door") || ArtCatalog.Has("Props/door_open");
+            door.useArt = art;
         }
 
         void Update()
@@ -30,9 +32,9 @@ namespace EcoDoTempo
                 {
                     showingOpen = open;
                     if (open && ArtCatalog.Has("Props/door_open"))
-                        ArtCatalog.TryApply(gameObject, "Props/door_open", new Vector2(1.1f, 0f));
+                        ArtCatalog.TryApply(gameObject, "Props/door_open", new Vector2(1.5f, 0f));
                     else if (ArtCatalog.Has("Props/door"))
-                        ArtCatalog.TryApply(gameObject, "Props/door", new Vector2(1.1f, 0f));
+                        ArtCatalog.TryApply(gameObject, "Props/door", new Vector2(1.5f, 0f));
                 }
                 sr.color = open
                     ? Color.Lerp(Color.white, new Color(1f, 0.95f, 0.7f), Mathf.PingPong(Time.time, 0.5f))

@@ -17,8 +17,11 @@ namespace EcoDoTempo
             ArtCatalog.TryApply(soil.gameObject, "Tiles/soil", Vector2.one);
             var spot = soil.gameObject.AddComponent<SeedSpot>();
 
-            var saplingGo = ArtCatalog.Create("Sapling", root, pos + new Vector2(0f, 0.75f), new Vector2(0.25f, 0.5f),
-                SpriteFactory.Triangle, Palette.Sapling, 2, "Props/sapling", Vector2.one * 0.7f);
+            var saplingPos = ArtCatalog.Has("Props/sapling")
+                ? ArtCatalog.FloorPos(pos + Vector2.up)
+                : pos + new Vector2(0f, 0.75f);
+            var saplingGo = ArtCatalog.Create("Sapling", root, saplingPos, new Vector2(0.25f, 0.5f),
+                SpriteFactory.Triangle, Palette.Sapling, 2, "Props/sapling", Vector2.one * 0.85f);
             spot.sapling = TimeObject.Add(saplingGo, EraPresence.PastOnly, Palette.Sapling, Palette.Sapling, solid: false);
             spot.sapling.ForceHidden = true;
 

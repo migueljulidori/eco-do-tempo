@@ -9,7 +9,8 @@ namespace EcoDoTempo
 
         public static void Create(Transform root, Vector2 pos)
         {
-            var go = ArtCatalog.Create("Lever", root, pos + Vector2.down * 0.15f, new Vector2(0.15f, 0.7f),
+            var place = ArtCatalog.Has("Props/lever") ? ArtCatalog.FloorPos(pos) : pos + Vector2.down * 0.15f;
+            var go = ArtCatalog.Create("Lever", root, place, new Vector2(0.15f, 0.7f),
                 SpriteFactory.Square, Palette.Lever, 3, "Props/lever", Vector2.one * 0.9f);
             if (!ArtCatalog.Has("Props/lever"))
                 go.transform.rotation = Quaternion.Euler(0f, 0f, 30f);

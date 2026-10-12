@@ -29,9 +29,16 @@ namespace EcoDoTempo
                     var pos = new Vector2(col, height - 1 - row);
                     switch (line[col])
                     {
-                        case '#': Block(root, pos, EraPresence.Both, Palette.PastWall, Palette.FutureWall); break;
-                        case 'p': Block(root, pos, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock); break;
-                        case 'f': Block(root, pos, EraPresence.FutureOnly, Palette.FutureBlock, Palette.FutureBlock); break;
+                        case '#':
+                            Block(root, pos, EraPresence.Both, Palette.PastWall, Palette.FutureWall,
+                                SolidArt(level.Map, row, col, pos));
+                            break;
+                        case 'p':
+                            Block(root, pos, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, "Tiles/block_past");
+                            break;
+                        case 'f':
+                            Block(root, pos, EraPresence.FutureOnly, Palette.FutureBlock, Palette.FutureBlock, "Tiles/block_future");
+                            break;
                         case '^': Spikes(root, pos); break;
                         case '@': result.Spawn = pos; break;
                         case '*': Fragment(root, pos, EraPresence.Both, result.FragmentCount++); break;
@@ -54,24 +61,52 @@ namespace EcoDoTempo
             return result;
         }
 
-        public static TimeObject Block(Transform root, Vector2 pos, EraPresence presence, Color past, Color future)
+        static bool IsSolidChar(char c) =>
+            c == '#' || c == 'p' || c == 'f' || c == 'G' || c == 'S';
+
+        // Surface cells (air above) use floor variants; buried cells use wall variants.
+        static string SolidArt(string[] map, int row, int col, Vector2 pos)
         {
-            string art = presence == EraPresence.FutureOnly ? "Tiles/block_future"
-                       : presence == EraPresence.PastOnly ? "Tiles/block_past"
-                       : "Tiles/wall";
-            var go = ArtCatalog.Create("Block", root, pos, Vector2.one, SpriteFactory.Square, past, 0, art, Vector2.one);
+            char above = '.';
+            if (row > 0 && col < map[row - 1].Length) above = map[row - 1][col];
+            bool surface = !IsSolidChar(above);
+
+            if (surface)
+            {
+                return ArtCatalog.Pick(pos,
+                    "Tiles/floor_a", "Tiles/floor_b", "Tiles/floor_c",
+                    "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c");
+            }
+
+            return ArtCatalog.Pick(pos, "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c", "Tiles/floor_a");
+        }
+
+        public static TimeObject Block(Transform root, Vector2 pos, EraPresence presence, Color past, Color future,
+            string artPath = null)
+        {
+            if (string.IsNullOrEmpty(artPath))
+            {
+                artPath = presence == EraPresence.FutureOnly ? "Tiles/block_future"
+                        : presence == EraPresence.PastOnly ? "Tiles/block_past"
+                        : "Tiles/wall";
+            }
+
+            var go = ArtCatalog.Create("Block", root, pos, Vector2.one, SpriteFactory.Square, past, 0,
+                artPath, Vector2.one);
             go.AddComponent<BoxCollider2D>().size = Vector2.one;
             return TimeObject.Add(go, presence, past, future, solid: true);
         }
 
         static void Spikes(Transform root, Vector2 pos)
         {
-            var go = ArtCatalog.Create("Spikes", root, pos, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes, 0,
+            // Bottom-center pivot: sit on the floor of the cell.
+            var place = ArtCatalog.Has("Props/spikes") ? ArtCatalog.FloorPos(pos) : pos;
+            var go = ArtCatalog.Create("Spikes", root, place, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes, 2,
                 "Props/spikes", Vector2.one);
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
-            col.size = new Vector2(0.8f, 0.5f);
-            col.offset = new Vector2(0f, -0.2f);
+            col.size = new Vector2(0.8f, 0.55f);
+            col.offset = ArtCatalog.Has("Props/spikes") ? new Vector2(0f, 0.3f) : new Vector2(0f, -0.2f);
             go.AddComponent<Hazard>();
             TimeObject.Add(go, EraPresence.Both, Palette.PastSpikes, Palette.FutureSpikes, solid: false);
         }
@@ -81,12 +116,11 @@ namespace EcoDoTempo
             var color = presence == EraPresence.FutureOnly ? Palette.FutureFragment : Palette.Fragment;
             string art = presence == EraPresence.FutureOnly ? "Props/fragment_future" : "Props/fragment";
             var go = ArtCatalog.Create("Fragment", root, pos, Vector2.one * 0.55f, SpriteFactory.Diamond, color, 5,
-                art, Vector2.one * 0.8f);
-            // If only the shared fragment art exists, use it for both eras.
-            if (!ArtCatalog.Has(art)) ArtCatalog.TryApply(go, "Props/fragment", Vector2.one * 0.8f);
+                art, Vector2.one * 0.85f);
+            if (!ArtCatalog.Has(art)) ArtCatalog.TryApply(go, "Props/fragment", Vector2.one * 0.85f);
             var col = go.AddComponent<CircleCollider2D>();
             col.isTrigger = true;
-            col.radius = 0.6f;
+            col.radius = 0.45f;
             var frag = go.AddComponent<MelodyFragment>();
             frag.Order = order;
             frag.UseCustomArt = ArtCatalog.Has("Props/fragment") || ArtCatalog.Has(art);
