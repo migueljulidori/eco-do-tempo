@@ -15,6 +15,7 @@ namespace EcoDoTempo
         public static bool Has(string resourcePath) => Get(resourcePath) != null;
 
         // Replaces the runtime shape with a drawn sprite when available.
+        // If worldScale.y <= 0, keeps the sprite aspect (scales by width only).
         public static bool TryApply(GameObject go, string resourcePath, Vector2 worldScale)
         {
             var sprite = Get(resourcePath);
@@ -25,7 +26,13 @@ namespace EcoDoTempo
 
             sr.sprite = sprite;
             sr.color = Color.white;
-            go.transform.localScale = new Vector3(worldScale.x, worldScale.y, 1f);
+
+            float nativeW = Mathf.Max(0.01f, sprite.bounds.size.x);
+            float nativeH = Mathf.Max(0.01f, sprite.bounds.size.y);
+            float sx = worldScale.x / nativeW;
+            float sy = worldScale.y > 0f ? worldScale.y / nativeH : sx; // preserve aspect when y <= 0
+            go.transform.localScale = new Vector3(sx, sy, 1f);
+
             if (go.GetComponent<ArtSpriteMarker>() == null)
                 go.AddComponent<ArtSpriteMarker>();
             return true;
