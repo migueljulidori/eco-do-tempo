@@ -19,6 +19,8 @@ namespace EcoDoTempo
 
         SpriteRenderer sr;
         Collider2D[] colliders;
+        ArtSpriteMarker art;
+        string appliedArt;
 
         public static TimeObject Add(GameObject go, EraPresence presence, Color past, Color future, bool solid)
         {
@@ -48,25 +50,44 @@ namespace EcoDoTempo
         {
             if (sr == null) sr = GetComponent<SpriteRenderer>();
             if (colliders == null) colliders = GetComponents<Collider2D>();
+            if (art == null) art = GetComponent<ArtSpriteMarker>();
 
             bool present = IsPresentIn(era);
 
             if (sr != null)
             {
-                sr.enabled = !ForceHidden;
-                // Drawn sprites keep their own colors; geometric placeholders still use the palette.
-                bool art = GetComponent<ArtSpriteMarker>() != null;
-                var color = art
-                    ? Color.white
-                    : Presence == EraPresence.PastOnly ? PastColor
-                    : Presence == EraPresence.FutureOnly ? FutureColor
-                    : era == Era.Past ? PastColor : FutureColor;
-                if (!present) color.a *= GhostAlpha;
-                else if (ForceIntangible) color.a *= IntangibleAlpha;
-                sr.color = color;
+                if (art != null && art.HideRenderer)
+                {
+                    sr.enabled = false;
+                }
+                else
+                {
+                    sr.enabled = !ForceHidden;
+                    SwapEraArt(era);
+                    bool hasArt = art != null || GetComponent<ArtSpriteMarker>() != null;
+                    var color = hasArt
+                        ? Color.white
+                        : Presence == EraPresence.PastOnly ? PastColor
+                        : Presence == EraPresence.FutureOnly ? FutureColor
+                        : era == Era.Past ? PastColor : FutureColor;
+                    if (!present) color.a *= GhostAlpha;
+                    else if (ForceIntangible) color.a *= IntangibleAlpha;
+                    sr.color = color;
+                }
             }
 
             foreach (var col in colliders) col.enabled = present && !ForceIntangible;
+        }
+
+        void SwapEraArt(Era era)
+        {
+            if (art == null) return;
+            string path = era == Era.Past ? art.PastArt : art.FutureArt;
+            if (string.IsNullOrEmpty(path)) path = art.PastArt;
+            if (string.IsNullOrEmpty(path) || path == appliedArt) return;
+            if (!ArtCatalog.Has(path)) return;
+            if (ArtCatalog.TryApply(gameObject, path, art.ArtScale))
+                appliedArt = path;
         }
     }
 }

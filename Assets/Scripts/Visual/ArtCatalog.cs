@@ -39,54 +39,45 @@ namespace EcoDoTempo
 
         public static bool Has(string resourcePath) => Get(resourcePath) != null;
 
-        // Top Y of the solid floor under a walkable cell.
         public static float FloorTop(Vector2 walkableCell) => walkableCell.y - 0.5f;
 
-        // Stable pick among existing resources.
-        public static string Pick(Vector2 pos, params string[] paths)
+        public static string FirstExisting(params string[] paths)
         {
-            int count = 0;
             for (int i = 0; i < paths.Length; i++)
-                if (Has(paths[i])) count++;
-            if (count == 0) return paths.Length > 0 ? paths[0] : null;
-
-            int index = Mathf.Abs((int)pos.x + (int)pos.y * 3) % count;
-            for (int i = 0; i < paths.Length; i++)
-            {
-                if (!Has(paths[i])) continue;
-                if (index == 0) return paths[i];
-                index--;
-            }
-            return paths[0];
+                if (Has(paths[i])) return paths[i];
+            return paths.Length > 0 ? paths[0] : null;
         }
 
-        // Walkable ledge: stone slabs + classic floors (never the long bridge strip).
-        public static string PickFloor(Vector2 pos)
+        // Coherent walkable surface: two-tone checker, not a random mix.
+        public static void PickFloorPair(Vector2 pos, out string past, out string future)
         {
-            return Pick(pos,
-                "Tiles/block_stone_past", "Tiles/block_stone_past", "Tiles/floor_a",
-                "Tiles/floor_b", "Tiles/floor_c", "Tiles/block_metal_past");
+            bool alt = ((int)pos.x & 1) == 0;
+            past = alt
+                ? FirstExisting("Tiles/floor_a", "Tiles/block_stone_past", "Tiles/wall")
+                : FirstExisting("Tiles/floor_b", "Tiles/floor_a", "Tiles/block_stone_past");
+            future = alt
+                ? FirstExisting("Tiles/block_stone_future", "Tiles/block_metal_future", "Tiles/block_future")
+                : FirstExisting("Tiles/block_metal_future", "Tiles/block_stone_future", "Tiles/block_future");
         }
 
-        // Buried / wall faces: colder stone + metal + wall variants.
-        public static string PickWall(Vector2 pos)
+        // Fill under the ledge: one family per era.
+        public static void PickWallPair(Vector2 pos, out string past, out string future)
         {
-            return Pick(pos,
-                "Tiles/block_stone_past", "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c",
-                "Tiles/block_metal_past", "Tiles/block_stone_past");
+            bool alt = (((int)pos.x + (int)pos.y) & 1) == 0;
+            past = alt
+                ? FirstExisting("Tiles/wall", "Tiles/block_stone_past")
+                : FirstExisting("Tiles/wall_b", "Tiles/wall", "Tiles/block_stone_past");
+            future = alt
+                ? FirstExisting("Tiles/block_stone_future", "Tiles/block_metal_future")
+                : FirstExisting("Tiles/block_metal_future", "Tiles/block_stone_future");
         }
 
-        // Past-only platforms: wood / stone (bridge is placed as a multi-cell run).
         public static string PickPastBlock(Vector2 pos) =>
-            Pick(pos, "Tiles/block_wood_past", "Tiles/block_wood_past", "Tiles/block_stone_past", "Tiles/block_past");
+            FirstExisting("Tiles/block_stone_past", "Tiles/block_wood_past", "Tiles/block_past");
 
         public static string PickFutureBlock(Vector2 pos) =>
-            Pick(pos,
-                "Tiles/block_wood_future", "Tiles/block_stone_future", "Tiles/block_metal_future",
-                "Tiles/block_future");
+            FirstExisting("Tiles/block_stone_future", "Tiles/block_metal_future", "Tiles/block_future");
 
-        // Replaces the runtime shape with a drawn sprite when available.
-        // If worldScale.y <= 0, keeps the sprite aspect (scales by width only).
         public static bool TryApply(GameObject go, string resourcePath, Vector2 worldScale)
         {
             var sprite = Get(resourcePath);
@@ -104,24 +95,24 @@ namespace EcoDoTempo
             float sy = worldScale.y > 0f ? worldScale.y / nativeH : sx;
             go.transform.localScale = new Vector3(sx, sy, 1f);
 
-            // Extra variety for tiles: occasional horizontal flip.
-            if (resourcePath.StartsWith("Tiles/floor") || resourcePath.StartsWith("Tiles/wall")
-                || resourcePath.StartsWith("Tiles/block_stone") || resourcePath.StartsWith("Tiles/block_metal"))
-            {
-                int h = go.transform.position.GetHashCode();
-                sr.flipX = (h & 1) == 0;
-            }
-
-            if (go.GetComponent<ArtSpriteMarker>() == null)
-                go.AddComponent<ArtSpriteMarker>();
+            var marker = go.GetComponent<ArtSpriteMarker>();
+            if (marker == null) marker = go.AddComponent<ArtSpriteMarker>();
             return true;
         }
 
-        // Lift keeps feet/props above the tile lip so they don't sink into the floor art.
+        public static ArtSpriteMarker SetEraArt(GameObject go, string past, string future, Vector2 scale)
+        {
+            var marker = go.GetComponent<ArtSpriteMarker>();
+            if (marker == null) marker = go.AddComponent<ArtSpriteMarker>();
+            marker.PastArt = past;
+            marker.FutureArt = string.IsNullOrEmpty(future) ? past : future;
+            marker.ArtScale = scale;
+            return marker;
+        }
+
         public const float FloorClearance = 0.35f;
         public const float PlayerFootClearance = 0.48f;
 
-        // Works with Center or Bottom pivots: rests the sprite bottom on floorTopY.
         public static void SnapBottomTo(GameObject go, float floorTopY, float lift = -1f)
         {
             if (lift < 0f) lift = FloorClearance;
@@ -131,7 +122,6 @@ namespace EcoDoTempo
             go.transform.position += new Vector3(0f, dy, 0f);
         }
 
-        // Align a platform sprite so its visual top (deck) meets a world Y.
         public static void SnapTopTo(GameObject go, float topY)
         {
             var sr = go.GetComponent<SpriteRenderer>();
@@ -140,7 +130,6 @@ namespace EcoDoTempo
             go.transform.position += new Vector3(0f, dy, 0f);
         }
 
-        // Puts sprite feet on a local collider bottom (+ clearance). Any pivot works.
         public static void AlignFeet(Transform visual, float colliderBottomLocal, float clearance = -1f)
         {
             if (clearance < 0f) clearance = FloorClearance;

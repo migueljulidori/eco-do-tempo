@@ -2,6 +2,12 @@ using UnityEngine;
 
 namespace EcoDoTempo
 {
-    // Marks a GameObject that uses drawn pixel art (keep colors, only fade alpha by era).
-    public class ArtSpriteMarker : MonoBehaviour { }
+    // Drawn pixel art: optional era swap + permanent hide (e.g. invisible bridge supports).
+    public class ArtSpriteMarker : MonoBehaviour
+    {
+        public string PastArt;
+        public string FutureArt;
+        public Vector2 ArtScale = Vector2.one;
+        public bool HideRenderer;
+    }
 }

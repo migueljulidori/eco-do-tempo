@@ -21,8 +21,9 @@ namespace EcoDoTempo
             foreach (var row in level.Map) width = Mathf.Max(width, row.Length);
             result.Size = new Vector2Int(width, height);
 
-            var bridgeCells = new HashSet<Vector2Int>();
-            PlaceBridgeRuns(level.Map, root, height, bridgeCells);
+            var claimed = new HashSet<Vector2Int>();
+            PlaceBridgeRuns(level.Map, root, height, claimed);
+            PlacePastBlockades(level.Map, root, height, claimed);
 
             int noteIndex = 0;
             for (int row = 0; row < height; row++)
@@ -33,15 +34,13 @@ namespace EcoDoTempo
                     var pos = new Vector2(col, height - 1 - row);
                     char cell = line[col];
 
-                    // Horizontal bridge runs already created colliders + bridge art.
-                    if (cell == 'p' && bridgeCells.Contains(new Vector2Int(col, row)))
+                    if (claimed.Contains(new Vector2Int(col, row)))
                         continue;
 
                     switch (cell)
                     {
                         case '#':
-                            Block(root, pos, EraPresence.Both, Palette.PastWall, Palette.FutureWall,
-                                SolidArt(level.Map, row, col, pos, height));
+                            PlaceSolid(root, pos, level.Map, row, col, height);
                             break;
                         case 'p':
                             Block(root, pos, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock,
@@ -73,11 +72,21 @@ namespace EcoDoTempo
             return result;
         }
 
-        // Long horizontal 'p' runs become one bridge_past span + wood deck colliders.
+        static void PlaceSolid(Transform root, Vector2 pos, string[] map, int row, int col, int height)
+        {
+            bool airAbove = !IsSolidChar(CharAt(map, row - 1, col, height));
+            string past;
+            string future;
+            if (airAbove) ArtCatalog.PickFloorPair(pos, out past, out future);
+            else ArtCatalog.PickWallPair(pos, out past, out future);
+
+            var block = Block(root, pos, EraPresence.Both, Palette.PastWall, Palette.FutureWall, past);
+            ArtCatalog.SetEraArt(block.gameObject, past, future, Vector2.one);
+        }
+
+        // Horizontal 'p' runs (3+) → bridge_past flush with the stone ledge.
         static void PlaceBridgeRuns(string[] map, Transform root, int height, HashSet<Vector2Int> claimed)
         {
-            if (!ArtCatalog.Has("Tiles/bridge_past")) return;
-
             for (int row = 0; row < height; row++)
             {
                 string line = map[row];
@@ -88,60 +97,122 @@ namespace EcoDoTempo
                     int start = col;
                     while (col < line.Length && line[col] == 'p') col++;
                     int length = col - start;
-                    // Need a real span; short pillars stay as wood/stone tiles.
                     if (length < 3) continue;
 
                     float worldY = height - 1 - row;
                     float deckTop = worldY + 0.5f;
+                    float centerX = start + (length - 1) * 0.5f;
 
                     for (int x = start; x < start + length; x++)
-                    {
                         claimed.Add(new Vector2Int(x, row));
-                        var support = Block(root, new Vector2(x, worldY), EraPresence.PastOnly,
-                            Palette.PastBlock, Palette.PastBlock, "Tiles/block_wood_past");
-                        var sr = support.GetComponent<SpriteRenderer>();
-                        if (sr != null) sr.enabled = false;
 
-                        // Collider only on the deck thickness (design: tablado).
-                        var col2d = support.GetComponent<BoxCollider2D>();
-                        if (col2d != null)
+                    if (ArtCatalog.Has("Tiles/bridge_past"))
+                    {
+                        for (int x = start; x < start + length; x++)
+                            PlaceHiddenSupport(root, new Vector2(x, worldY), EraPresence.PastOnly);
+
+                        // Exact cell height so the walking surface matches neighboring floors.
+                        var bridge = ArtCatalog.Create("Bridge", root, new Vector2(centerX, worldY),
+                            new Vector2(length, 1f), SpriteFactory.Square, Palette.PastBlock, 2,
+                            "Tiles/bridge_past", new Vector2(length, 1f));
+                        ArtCatalog.SnapTopTo(bridge, deckTop);
+                        ArtCatalog.SetEraArt(bridge, "Tiles/bridge_past", "Tiles/bridge_past", new Vector2(length, 1f));
+                        TimeObject.Add(bridge, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
+                    }
+                    else
+                    {
+                        for (int x = start; x < start + length; x++)
                         {
-                            col2d.size = new Vector2(1f, 0.35f);
-                            col2d.offset = new Vector2(0f, 0.325f);
+                            var wood = Block(root, new Vector2(x, worldY), EraPresence.PastOnly,
+                                Palette.PastBlock, Palette.PastBlock, "Tiles/block_wood_past");
+                            var sr = wood.GetComponent<SpriteRenderer>();
+                            if (sr != null) sr.sortingOrder = 2;
                         }
                     }
-
-                    float centerX = start + (length - 1) * 0.5f;
-                    // Native bridge is 4×1 units; scale width to the run, keep aspect.
-                    var bridge = ArtCatalog.Create("Bridge", root, new Vector2(centerX, worldY),
-                        new Vector2(length, 1f), SpriteFactory.Square, Palette.PastBlock, 1,
-                        "Tiles/bridge_past", new Vector2(length, 0f));
-                    // Art has ~10px empty pad above the deck on a 32px canvas — put deck on collider top.
-                    var bridgeSr = bridge.GetComponent<SpriteRenderer>();
-                    if (bridgeSr != null && bridgeSr.sprite != null)
-                    {
-                        const float topPad = 10f / 32f;
-                        float h = bridgeSr.bounds.size.y;
-                        ArtCatalog.SnapBottomTo(bridge, deckTop - h * (1f - topPad), lift: 0f);
-                    }
-                    TimeObject.Add(bridge, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
                 }
             }
         }
 
+        // Vertical 'p' stacks (2+) → one iron blockade instead of a wood crate tower.
+        static void PlacePastBlockades(string[] map, Transform root, int height, HashSet<Vector2Int> claimed)
+        {
+            if (!ArtCatalog.Has("Props/blockade")) return;
+
+            int width = 0;
+            foreach (var line in map) width = Mathf.Max(width, line.Length);
+
+            for (int col = 0; col < width; col++)
+            {
+                int row = 0;
+                while (row < height)
+                {
+                    if (CharAt(map, row, col, height) != 'p' || claimed.Contains(new Vector2Int(col, row)))
+                    {
+                        row++;
+                        continue;
+                    }
+
+                    int start = row;
+                    while (row < height && CharAt(map, row, col, height) == 'p'
+                           && !claimed.Contains(new Vector2Int(col, row)))
+                        row++;
+                    int length = row - start;
+                    if (length < 2) continue;
+
+                    for (int r = start; r < start + length; r++)
+                        claimed.Add(new Vector2Int(col, r));
+
+                    // Bottom cell of the stack in world space.
+                    int bottomRow = start + length - 1;
+                    float bottomY = height - 1 - bottomRow;
+                    float feetY = bottomY - 0.5f;
+                    float artH = Mathf.Clamp(length, 2, 3);
+
+                    var go = ArtCatalog.Create("Blockade", root, new Vector2(col, bottomY),
+                        new Vector2(1.2f, artH), SpriteFactory.Square, Palette.PastGate, 3,
+                        "Props/blockade", new Vector2(1.2f, artH));
+                    ArtCatalog.SnapBottomTo(go, feetY, lift: 0.02f);
+
+                    var sr = go.GetComponent<SpriteRenderer>();
+                    var col2d = go.AddComponent<BoxCollider2D>();
+                    if (sr != null && sr.sprite != null)
+                    {
+                        col2d.size = new Vector2(1.05f, sr.bounds.size.y * 0.92f);
+                        col2d.offset = new Vector2(0f, sr.bounds.center.y - go.transform.position.y);
+                    }
+                    else
+                    {
+                        col2d.size = new Vector2(1.05f, artH);
+                        col2d.offset = new Vector2(0f, artH * 0.5f - 0.5f);
+                    }
+
+                    ArtCatalog.SetEraArt(go, "Props/blockade", "Props/blockade", new Vector2(1.2f, artH));
+                    TimeObject.Add(go, EraPresence.PastOnly, Palette.PastGate, Palette.FutureGate, solid: true);
+                }
+            }
+        }
+
+        static void PlaceHiddenSupport(Transform root, Vector2 pos, EraPresence presence)
+        {
+            var go = new GameObject("BridgeSupport");
+            go.transform.SetParent(root, false);
+            go.transform.position = pos;
+            var col = go.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(1f, 0.4f);
+            col.offset = new Vector2(0f, 0.3f);
+            TimeObject.Add(go, presence, Palette.PastBlock, Palette.PastBlock, solid: true);
+        }
+
+        static char CharAt(string[] map, int row, int col, int height)
+        {
+            if (row < 0 || row >= height || col < 0) return '.';
+            string line = map[row];
+            if (col >= line.Length) return '.';
+            return line[col];
+        }
+
         static bool IsSolidChar(char c) =>
             c == '#' || c == 'p' || c == 'f' || c == 'G' || c == 'S';
-
-        static string SolidArt(string[] map, int row, int col, Vector2 pos, int height)
-        {
-            char above = '#';
-            if (row > 0 && col < map[row - 1].Length) above = map[row - 1][col];
-            else if (row == 0) above = '#';
-
-            bool airAbove = !IsSolidChar(above);
-            if (airAbove) return ArtCatalog.PickFloor(pos);
-            return ArtCatalog.PickWall(pos);
-        }
 
         public static TimeObject Block(Transform root, Vector2 pos, EraPresence presence, Color past, Color future,
             string artPath = null)
@@ -155,21 +226,24 @@ namespace EcoDoTempo
 
             var go = ArtCatalog.Create("Block", root, pos, Vector2.one, SpriteFactory.Square, past, 0,
                 artPath, Vector2.one);
+            ArtCatalog.SetEraArt(go, artPath, artPath, Vector2.one);
             go.AddComponent<BoxCollider2D>().size = Vector2.one;
             return TimeObject.Add(go, presence, past, future, solid: true);
         }
 
         static void Spikes(Transform root, Vector2 pos)
         {
-            var go = ArtCatalog.Create("Spikes", root, pos, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes, 2,
+            var go = ArtCatalog.Create("Spikes", root, pos, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes, 4,
                 "Props/spikes", Vector2.one);
+            // Flush on the pit floor (top of the solid under this air cell).
             if (ArtCatalog.Has("Props/spikes"))
-                ArtCatalog.SnapBottomTo(go, ArtCatalog.FloorTop(pos));
+                ArtCatalog.SnapBottomTo(go, pos.y - 0.5f, lift: 0f);
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
-            col.size = new Vector2(0.85f, 0.5f);
-            col.offset = new Vector2(0f, 0.15f);
+            col.size = new Vector2(0.9f, 0.5f);
+            col.offset = new Vector2(0f, 0f);
             go.AddComponent<Hazard>();
+            ArtCatalog.SetEraArt(go, "Props/spikes", "Props/spikes", Vector2.one);
             TimeObject.Add(go, EraPresence.Both, Palette.PastSpikes, Palette.FutureSpikes, solid: false);
         }
 
