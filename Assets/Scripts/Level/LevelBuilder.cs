@@ -288,14 +288,12 @@ namespace EcoDoTempo
 
         static void Spikes(Transform root, Vector2 pos)
         {
-            const float lift = 0.42f;
             var go = ArtCatalog.Create("Spikes", root, pos, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes, 4,
                 "Props/spikes", Vector2.one);
+            // Sit on the pit floor (the solid cell directly under the spike).
             float floor = pos.y - 0.5f;
             if (ArtCatalog.Has("Props/spikes"))
-                ArtCatalog.SnapBottomTo(go, floor, lift: lift);
-            else
-                go.transform.position += Vector3.up * lift;
+                ArtCatalog.SnapBottomTo(go, floor, lift: 0f);
 
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
