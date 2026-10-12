@@ -85,10 +85,17 @@ namespace EcoDoTempo
             string path = era == Era.Past ? art.PastArt : art.FutureArt;
             if (string.IsNullOrEmpty(path)) path = art.PastArt;
             if (string.IsNullOrEmpty(path) || path == appliedArt) return;
-            if (path == "Tiles/bridge_deck" || path == "Tiles/bridge_past")
+            if (path == "Tiles/bridge_deck" || path == "Tiles/bridge_past" || path == "Tiles/bridge_plank")
             {
-                if (ArtCatalog.TryApplyBridge(gameObject, art.ArtScale.x))
+                if (path == "Tiles/bridge_plank")
+                {
+                    if (ArtCatalog.TryApply(gameObject, path, art.ArtScale))
+                        appliedArt = path;
+                }
+                else if (ArtCatalog.TryApplyBridge(gameObject, art.ArtScale.x))
+                {
                     appliedArt = path;
+                }
                 var anchor = GetComponent<BridgeAnchor>();
                 if (anchor != null) anchor.Align();
                 return;
