@@ -6,16 +6,19 @@ namespace EcoDoTempo
     public class Lever : MonoBehaviour, IInteractable
     {
         bool pulled;
+        Vector2 cell;
 
         public static void Create(Transform root, Vector2 pos)
         {
-            var place = ArtCatalog.Has("Props/lever") ? ArtCatalog.FloorPos(pos) : pos + Vector2.down * 0.15f;
-            var go = ArtCatalog.Create("Lever", root, place, new Vector2(0.15f, 0.7f),
+            var go = ArtCatalog.Create("Lever", root, pos, new Vector2(0.15f, 0.7f),
                 SpriteFactory.Square, Palette.Lever, 3, "Props/lever", Vector2.one * 0.9f);
-            if (!ArtCatalog.Has("Props/lever"))
+            if (ArtCatalog.Has("Props/lever"))
+                ArtCatalog.SnapBottomTo(go, ArtCatalog.FloorTop(pos));
+            else
                 go.transform.rotation = Quaternion.Euler(0f, 0f, 30f);
             go.AddComponent<BoxCollider2D>().isTrigger = true;
-            go.AddComponent<Lever>();
+            var lever = go.AddComponent<Lever>();
+            lever.cell = pos;
             TimeObject.Add(go, EraPresence.Both, Palette.Lever, Palette.FutureLever, solid: false);
         }
 
@@ -33,11 +36,12 @@ namespace EcoDoTempo
             }
             pulled = true;
             if (ArtCatalog.Has("Props/lever_pulled"))
+            {
                 ArtCatalog.TryApply(gameObject, "Props/lever_pulled", Vector2.one * 0.9f);
+                ArtCatalog.SnapBottomTo(gameObject, ArtCatalog.FloorTop(transform.position + Vector3.up * 0.5f));
+            }
             else if (!ArtCatalog.Has("Props/lever"))
                 transform.rotation = Quaternion.Euler(0f, 0f, -30f);
-            else
-                transform.rotation = Quaternion.Euler(0f, 0f, -25f);
             gm.OpenGates();
             gm.Synth.PlayNote(220f, 0.4f);
             gm.ShowMessage("Algo pesado se move ao longe. A comporta se abriu... em todas as eras.");

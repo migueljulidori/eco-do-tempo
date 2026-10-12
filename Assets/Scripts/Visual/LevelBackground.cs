@@ -57,8 +57,11 @@ namespace EcoDoTempo
         Sprite LoadSprite(Era era)
         {
             string suffix = era == Era.Past ? "past" : "future";
-            return ArtCatalog.Get($"Backgrounds/{key}_{suffix}")
+            // Prefer hi-res 2× plates when present, then standard 736×288.
+            return ArtCatalog.Get($"Backgrounds/{key}_{suffix}_1472x576")
+                ?? ArtCatalog.Get($"Backgrounds/{key}_{suffix}")
                 ?? ArtCatalog.Get($"Backgrounds/{key}")
+                ?? ArtCatalog.Get($"Backgrounds/{key}_past_1472x576")
                 ?? ArtCatalog.Get($"Backgrounds/{key}_past");
         }
     }

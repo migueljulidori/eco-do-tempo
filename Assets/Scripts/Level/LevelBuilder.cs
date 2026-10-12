@@ -31,7 +31,7 @@ namespace EcoDoTempo
                     {
                         case '#':
                             Block(root, pos, EraPresence.Both, Palette.PastWall, Palette.FutureWall,
-                                SolidArt(level.Map, row, col, pos));
+                                SolidArt(level.Map, row, col, pos, height));
                             break;
                         case 'p':
                             Block(root, pos, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, "Tiles/block_past");
@@ -64,21 +64,24 @@ namespace EcoDoTempo
         static bool IsSolidChar(char c) =>
             c == '#' || c == 'p' || c == 'f' || c == 'G' || c == 'S';
 
-        // Surface cells (air above) use floor variants; buried cells use wall variants.
-        static string SolidArt(string[] map, int row, int col, Vector2 pos)
+        // Walkable surface (air above) -> floor A/B/C only. Buried / ceiling -> wall variants.
+        static string SolidArt(string[] map, int row, int col, Vector2 pos, int height)
         {
-            char above = '.';
+            char above = '#';
             if (row > 0 && col < map[row - 1].Length) above = map[row - 1][col];
-            bool surface = !IsSolidChar(above);
+            else if (row == 0) above = '#'; // top row is ceiling, not floor
 
-            if (surface)
-            {
-                return ArtCatalog.Pick(pos,
-                    "Tiles/floor_a", "Tiles/floor_b", "Tiles/floor_c",
-                    "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c");
-            }
+            char below = '#';
+            if (row + 1 < height && col < map[row + 1].Length) below = map[row + 1][col];
 
-            return ArtCatalog.Pick(pos, "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c", "Tiles/floor_a");
+            bool airAbove = !IsSolidChar(above);
+            bool airBelow = !IsSolidChar(below);
+
+            // Floor/ledge: solid with empty space above.
+            if (airAbove) return ArtCatalog.PickFloor(pos);
+            // Ceiling underside: solid with empty space below — use wall variants, not floor.
+            if (airBelow) return ArtCatalog.PickWall(pos);
+            return ArtCatalog.PickWall(pos);
         }
 
         public static TimeObject Block(Transform root, Vector2 pos, EraPresence presence, Color past, Color future,
@@ -99,14 +102,14 @@ namespace EcoDoTempo
 
         static void Spikes(Transform root, Vector2 pos)
         {
-            // Bottom-center pivot: sit on the floor of the cell.
-            var place = ArtCatalog.Has("Props/spikes") ? ArtCatalog.FloorPos(pos) : pos;
-            var go = ArtCatalog.Create("Spikes", root, place, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes, 2,
+            var go = ArtCatalog.Create("Spikes", root, pos, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes, 2,
                 "Props/spikes", Vector2.one);
+            if (ArtCatalog.Has("Props/spikes"))
+                ArtCatalog.SnapBottomTo(go, ArtCatalog.FloorTop(pos));
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
-            col.size = new Vector2(0.8f, 0.55f);
-            col.offset = ArtCatalog.Has("Props/spikes") ? new Vector2(0f, 0.3f) : new Vector2(0f, -0.2f);
+            col.size = new Vector2(0.85f, 0.5f);
+            col.offset = new Vector2(0f, 0.15f);
             go.AddComponent<Hazard>();
             TimeObject.Add(go, EraPresence.Both, Palette.PastSpikes, Palette.FutureSpikes, solid: false);
         }

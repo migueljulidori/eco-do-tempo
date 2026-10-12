@@ -14,10 +14,10 @@ namespace EcoDoTempo
 
         public static bool Has(string resourcePath) => Get(resourcePath) != null;
 
-        // Bottom of a map cell (for sprites with Bottom Center pivot).
-        public static Vector2 FloorPos(Vector2 cellCenter) => cellCenter + Vector2.down * 0.5f;
+        // Top Y of the solid floor under a walkable cell.
+        public static float FloorTop(Vector2 walkableCell) => walkableCell.y - 0.5f;
 
-        // Stable pick among existing resources (breaks tile repetition).
+        // Stable pick among existing resources.
         public static string Pick(Vector2 pos, params string[] paths)
         {
             int count = 0;
@@ -25,7 +25,7 @@ namespace EcoDoTempo
                 if (Has(paths[i])) count++;
             if (count == 0) return paths.Length > 0 ? paths[0] : null;
 
-            int index = Mathf.Abs((int)(pos.x * 17f + pos.y * 31f + 7f)) % count;
+            int index = Mathf.Abs((int)pos.x + (int)pos.y * 3) % count;
             for (int i = 0; i < paths.Length; i++)
             {
                 if (!Has(paths[i])) continue;
@@ -34,6 +34,29 @@ namespace EcoDoTempo
             }
             return paths[0];
         }
+
+        // Cycle floors A/B/C by column so the ground never looks like one stamp.
+        public static string PickFloor(Vector2 pos)
+        {
+            string[] floors = { "Tiles/floor_a", "Tiles/floor_b", "Tiles/floor_c" };
+            int available = 0;
+            for (int i = 0; i < floors.Length; i++)
+                if (Has(floors[i])) available++;
+
+            if (available == 0) return Pick(pos, "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c");
+
+            int slot = Mathf.Abs((int)pos.x) % available;
+            for (int i = 0; i < floors.Length; i++)
+            {
+                if (!Has(floors[i])) continue;
+                if (slot == 0) return floors[i];
+                slot--;
+            }
+            return floors[0];
+        }
+
+        public static string PickWall(Vector2 pos) =>
+            Pick(pos, "Tiles/wall", "Tiles/wall_b", "Tiles/wall_c");
 
         // Replaces the runtime shape with a drawn sprite when available.
         // If worldScale.y <= 0, keeps the sprite aspect (scales by width only).
@@ -57,6 +80,15 @@ namespace EcoDoTempo
             if (go.GetComponent<ArtSpriteMarker>() == null)
                 go.AddComponent<ArtSpriteMarker>();
             return true;
+        }
+
+        // Works with Center or Bottom pivots: rests the sprite bottom on floorTopY.
+        public static void SnapBottomTo(GameObject go, float floorTopY, float lift = 0.02f)
+        {
+            var sr = go.GetComponent<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return;
+            float dy = floorTopY + lift - sr.bounds.min.y;
+            go.transform.position += new Vector3(0f, dy, 0f);
         }
 
         public static GameObject Create(string name, Transform parent, Vector2 position, Vector2 fallbackScale,
