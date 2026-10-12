@@ -96,6 +96,13 @@ namespace EcoDoTempo
             float sy = worldScale.y > 0f ? worldScale.y / nativeH : sx;
             go.transform.localScale = new Vector3(sx, sy, 1f);
 
+            // Extra variety for tiles: occasional horizontal flip.
+            if (resourcePath.StartsWith("Tiles/floor") || resourcePath.StartsWith("Tiles/wall"))
+            {
+                int h = go.transform.position.GetHashCode();
+                sr.flipX = (h & 1) == 0;
+            }
+
             if (go.GetComponent<ArtSpriteMarker>() == null)
                 go.AddComponent<ArtSpriteMarker>();
             return true;

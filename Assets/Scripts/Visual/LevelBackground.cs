@@ -50,8 +50,8 @@ namespace EcoDoTempo
             float scaledH = spriteH * scale;
             float centerX = (levelSize.x - 1) * 0.5f;
 
-            // Painted floor ledge sits ~28% up from the bottom of the plate.
-            const float LedgeFromBottom = 0.28f;
+            // Painted floor ledge sits ~22% up from the bottom of the plate.
+            const float LedgeFromBottom = 0.22f;
             float centerY = floorWorldY - (LedgeFromBottom - 0.5f) * scaledH;
             transform.position = new Vector3(centerX, centerY, 0f);
         }
