@@ -9,9 +9,13 @@ namespace EcoDoTempo
         SpriteRenderer sr;
         string key;
         Vector2Int levelSize;
-        float floorWorldY;
+        float floorTopY;
 
-        public static LevelBackground Create(Transform root, string backgroundKey, Vector2Int size, float floorCellY)
+        // Measured on salao_past: walkable ledge ~33% up from the bottom of the plate.
+        const float PastLedgeFromBottom = 0.33f;
+        const float FutureLedgeFromBottom = 0.33f;
+
+        public static LevelBackground Create(Transform root, string backgroundKey, Vector2Int size, float floorTopY)
         {
             if (string.IsNullOrEmpty(backgroundKey)) return null;
 
@@ -22,7 +26,7 @@ namespace EcoDoTempo
             bg.sr.sortingOrder = -100;
             bg.key = backgroundKey;
             bg.levelSize = size;
-            bg.floorWorldY = floorCellY - 0.5f; // top of the solid floor under the walkway
+            bg.floorTopY = floorTopY;
             bg.Apply(Era.Past);
             return bg;
         }
@@ -50,9 +54,9 @@ namespace EcoDoTempo
             float scaledH = spriteH * scale;
             float centerX = (levelSize.x - 1) * 0.5f;
 
-            // Painted floor ledge sits ~22% up from the bottom of the plate.
-            const float LedgeFromBottom = 0.22f;
-            float centerY = floorWorldY - (LedgeFromBottom - 0.5f) * scaledH;
+            float ledgeFromBottom = era == Era.Past ? PastLedgeFromBottom : FutureLedgeFromBottom;
+            // Place the plate so the painted ledge sits on the gameplay floor top.
+            float centerY = floorTopY - (ledgeFromBottom - 0.5f) * scaledH;
             transform.position = new Vector3(centerX, centerY, 0f);
         }
 
