@@ -130,6 +130,18 @@ namespace EcoDoTempo
             go.transform.position += new Vector3(0f, dy, 0f);
         }
 
+        // bridge_past.png: ~10px empty pad above the walking deck on a 32px canvas.
+        const float BridgeDeckPadFromTop = 10f / 32f;
+
+        public static void SnapBridgeDeckTo(GameObject go, float deckY)
+        {
+            var sr = go.GetComponent<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return;
+            float h = sr.bounds.size.y;
+            // Canvas top sits above the deck by the transparent pad.
+            SnapTopTo(go, deckY + h * BridgeDeckPadFromTop);
+        }
+
         public static void AlignFeet(Transform visual, float colliderBottomLocal, float clearance = -1f)
         {
             if (clearance < 0f) clearance = FloorClearance;

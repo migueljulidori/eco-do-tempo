@@ -73,15 +73,15 @@ namespace EcoDoTempo
                         "Um cartaz novo: \"Hoje, ao amanhecer, o Grande Relógio tocará a Canção do Eco para toda a vila.\"",
                         "O mesmo cartaz, desbotado e rasgado. Só se lê: \"...a Canção do Eco... nunca mais...\""),
                 },
-                // Fosso central: ponte no passado; comporta de ferro (2 de altura) trava a saída.
-                // No futuro a ponte some e a comporta também — cruze no passado, passe no futuro.
+                // Fosso: ponte no passado; comporta trava a saída.
+                // Notas em trilha: perto do início → sobre a ponte (passado) → à direita (futuro).
                 Map = new[]
                 {
                     "#............................#",
                     "#............................#",
-                    "#......................2.....#",
-                    "#..........1............p....#",
-                    "#.@..i.*................p..D.#",
+                    "#............................#",
+                    "#......*......1.........2....#",
+                    "#.@..i..................p..D.#",
                     "############pppppp############",
                     "############^^^^^^############",
                     "##############################",

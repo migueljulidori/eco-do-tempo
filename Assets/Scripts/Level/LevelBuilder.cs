@@ -111,13 +111,14 @@ namespace EcoDoTempo
                         for (int x = start; x < start + length; x++)
                             PlaceHiddenSupport(root, new Vector2(x, worldY), EraPresence.PastOnly);
 
-                        // Exact cell height so the walking surface matches neighboring floors.
+                        // Width = span, height = 1 cell; align the wood DECK (not canvas top) to the ledge.
                         var bridge = ArtCatalog.Create("Bridge", root, new Vector2(centerX, worldY),
                             new Vector2(length, 1f), SpriteFactory.Square, Palette.PastBlock, 2,
                             "Tiles/bridge_past", new Vector2(length, 1f));
-                        ArtCatalog.SnapTopTo(bridge, deckTop);
                         ArtCatalog.SetEraArt(bridge, "Tiles/bridge_past", "Tiles/bridge_past", new Vector2(length, 1f));
                         TimeObject.Add(bridge, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
+                        // After scale/pivot settle, put the wood deck flush with the stone ledge.
+                        ArtCatalog.SnapBridgeDeckTo(bridge, deckTop);
                     }
                     else
                     {
@@ -198,8 +199,9 @@ namespace EcoDoTempo
             go.transform.SetParent(root, false);
             go.transform.position = pos;
             var col = go.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(1f, 0.4f);
-            col.offset = new Vector2(0f, 0.3f);
+            // Full cell — top matches neighboring stone floors (pos.y + 0.5).
+            col.size = Vector2.one;
+            col.offset = Vector2.zero;
             TimeObject.Add(go, presence, Palette.PastBlock, Palette.PastBlock, solid: true);
         }
 
@@ -252,11 +254,14 @@ namespace EcoDoTempo
             var color = presence == EraPresence.FutureOnly ? Palette.FutureFragment : Palette.Fragment;
             string art = presence == EraPresence.FutureOnly ? "Props/fragment_future" : "Props/fragment";
             var go = ArtCatalog.Create("Fragment", root, pos, Vector2.one * 0.55f, SpriteFactory.Diamond, color, 5,
-                art, Vector2.one * 0.85f);
-            if (!ArtCatalog.Has(art)) ArtCatalog.TryApply(go, "Props/fragment", Vector2.one * 0.85f);
+                art, Vector2.one * 0.7f);
+            if (!ArtCatalog.Has(art)) ArtCatalog.TryApply(go, "Props/fragment", Vector2.one * 0.7f);
+            // Hover just above the bottom of this cell (reads as a clear pickup lane).
+            if (ArtCatalog.Has(art) || ArtCatalog.Has("Props/fragment"))
+                ArtCatalog.SnapBottomTo(go, pos.y - 0.5f, lift: 0.35f);
             var col = go.AddComponent<CircleCollider2D>();
             col.isTrigger = true;
-            col.radius = 0.45f;
+            col.radius = 0.4f;
             var frag = go.AddComponent<MelodyFragment>();
             frag.Order = order;
             frag.UseCustomArt = ArtCatalog.Has("Props/fragment") || ArtCatalog.Has(art);
