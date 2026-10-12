@@ -38,7 +38,6 @@ namespace EcoDoTempo
             var spans = FindBridgeSpans(level.Map, height, claimed);
             PlaceCratePiles(level.Map, root, height, claimed);
 
-            float floorTop = float.NegativeInfinity;
             int noteIndex = 0;
             for (int row = 0; row < height; row++)
             {
@@ -55,8 +54,6 @@ namespace EcoDoTempo
                     {
                         case '#':
                             PlaceSolid(root, pos, level.Map, row, col, height);
-                            if (!IsSolidChar(CharAt(level.Map, row - 1, col, height)))
-                                floorTop = Mathf.Max(floorTop, pos.y + 0.5f);
                             break;
                         case 'p':
                             PlaceCrate(root, pos);
@@ -86,16 +83,8 @@ namespace EcoDoTempo
             }
 
             PlaceBridgeSpans(spans, root, height);
-            // Bridge cells are also walkable floor tops.
-            foreach (var span in spans)
-            {
-                float y = height - 1 - span.Row + SceneYAlign;
-                floorTop = Mathf.Max(floorTop, y + 0.5f);
-            }
-
-            result.FloorTopY = float.IsNegativeInfinity(floorTop)
-                ? result.Spawn.y - 0.5f
-                : floorTop;
+            // Top of the solid under Lia — not the open tops of the side walls.
+            result.FloorTopY = result.Spawn.y - 0.5f;
             return result;
         }
 

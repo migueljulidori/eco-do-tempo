@@ -11,9 +11,9 @@ namespace EcoDoTempo
         Vector2Int levelSize;
         float floorTopY;
 
-        // Measured on salao_past: walkable ledge ~33% up from the bottom of the plate.
-        const float PastLedgeFromBottom = 0.33f;
-        const float FutureLedgeFromBottom = 0.33f;
+        // Lit lip of the painted floor on salao_past (fraction up from the bottom).
+        const float PastLedgeFromBottom = 0.26f;
+        const float FutureLedgeFromBottom = 0.26f;
 
         public static LevelBackground Create(Transform root, string backgroundKey, Vector2Int size, float floorTopY)
         {
