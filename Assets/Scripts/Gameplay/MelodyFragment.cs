@@ -5,6 +5,7 @@ namespace EcoDoTempo
     public class MelodyFragment : MonoBehaviour
     {
         public int Order;
+        public bool UseCustomArt;
         Vector3 basePosition;
 
         void Start() => basePosition = transform.position;
@@ -12,7 +13,7 @@ namespace EcoDoTempo
         void Update()
         {
             transform.position = basePosition + Vector3.up * Mathf.Sin(Time.time * 3f + Order) * 0.1f;
-            transform.Rotate(0f, 0f, 60f * Time.deltaTime);
+            if (!UseCustomArt) transform.Rotate(0f, 0f, 60f * Time.deltaTime);
         }
 
         void OnTriggerEnter2D(Collider2D other)

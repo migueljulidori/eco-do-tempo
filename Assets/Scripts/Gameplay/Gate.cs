@@ -9,6 +9,7 @@ namespace EcoDoTempo
         public static void Create(Transform root, Vector2 pos)
         {
             var block = LevelBuilder.Block(root, pos, EraPresence.Both, Palette.PastGate, Palette.FutureGate);
+            ArtCatalog.TryApply(block.gameObject, "Tiles/gate", Vector2.one);
             var gate = block.gameObject.AddComponent<Gate>();
             gate.timeObject = block;
             GameManager.Instance.RegisterGate(gate);

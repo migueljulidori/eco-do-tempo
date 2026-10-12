@@ -7,17 +7,39 @@ namespace EcoDoTempo
     {
         SpriteRenderer sr;
 
+        bool useArt;
+        bool showingOpen;
+
         public static void Create(Transform root, Vector2 pos)
         {
-            var go = SpriteFactory.CreateObject("Door", root, pos + Vector2.up * 0.45f, new Vector2(0.9f, 1.9f),
-                SpriteFactory.Square, Palette.DoorLocked, 1);
+            var go = ArtCatalog.Create("Door", root, pos + Vector2.up * 0.45f, new Vector2(0.9f, 1.9f),
+                SpriteFactory.Square, Palette.DoorLocked, 1, "Props/door", new Vector2(1f, 2f));
             go.AddComponent<BoxCollider2D>().isTrigger = true;
-            go.AddComponent<ExitDoor>().sr = go.GetComponent<SpriteRenderer>();
+            var door = go.AddComponent<ExitDoor>();
+            door.sr = go.GetComponent<SpriteRenderer>();
+            door.useArt = ArtCatalog.Has("Props/door") || ArtCatalog.Has("Props/door_open");
         }
 
         void Update()
         {
-            sr.color = GameManager.Instance.AllFragmentsCollected
+            bool open = GameManager.Instance.AllFragmentsCollected;
+            if (useArt)
+            {
+                if (open != showingOpen)
+                {
+                    showingOpen = open;
+                    if (open && ArtCatalog.Has("Props/door_open"))
+                        ArtCatalog.TryApply(gameObject, "Props/door_open", new Vector2(1f, 2f));
+                    else if (ArtCatalog.Has("Props/door"))
+                        ArtCatalog.TryApply(gameObject, "Props/door", new Vector2(1f, 2f));
+                }
+                sr.color = open
+                    ? Color.Lerp(Color.white, new Color(1f, 0.95f, 0.7f), Mathf.PingPong(Time.time, 0.5f))
+                    : Color.white;
+                return;
+            }
+
+            sr.color = open
                 ? Color.Lerp(Palette.DoorOpen, Color.white, Mathf.PingPong(Time.time, 0.5f))
                 : Palette.DoorLocked;
         }

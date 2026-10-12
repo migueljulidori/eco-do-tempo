@@ -56,14 +56,18 @@ namespace EcoDoTempo
 
         public static TimeObject Block(Transform root, Vector2 pos, EraPresence presence, Color past, Color future)
         {
-            var go = SpriteFactory.CreateObject("Block", root, pos, Vector2.one, SpriteFactory.Square, past);
+            string art = presence == EraPresence.FutureOnly ? "Tiles/block_future"
+                       : presence == EraPresence.PastOnly ? "Tiles/block_past"
+                       : "Tiles/wall";
+            var go = ArtCatalog.Create("Block", root, pos, Vector2.one, SpriteFactory.Square, past, 0, art, Vector2.one);
             go.AddComponent<BoxCollider2D>().size = Vector2.one;
             return TimeObject.Add(go, presence, past, future, solid: true);
         }
 
         static void Spikes(Transform root, Vector2 pos)
         {
-            var go = SpriteFactory.CreateObject("Spikes", root, pos, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes);
+            var go = ArtCatalog.Create("Spikes", root, pos, Vector2.one, SpriteFactory.Triangle, Palette.PastSpikes, 0,
+                "Props/spikes", Vector2.one);
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
             col.size = new Vector2(0.8f, 0.5f);
@@ -75,11 +79,17 @@ namespace EcoDoTempo
         static void Fragment(Transform root, Vector2 pos, EraPresence presence, int order)
         {
             var color = presence == EraPresence.FutureOnly ? Palette.FutureFragment : Palette.Fragment;
-            var go = SpriteFactory.CreateObject("Fragment", root, pos, Vector2.one * 0.55f, SpriteFactory.Diamond, color, 5);
+            string art = presence == EraPresence.FutureOnly ? "Props/fragment_future" : "Props/fragment";
+            var go = ArtCatalog.Create("Fragment", root, pos, Vector2.one * 0.55f, SpriteFactory.Diamond, color, 5,
+                art, Vector2.one * 0.8f);
+            // If only the shared fragment art exists, use it for both eras.
+            if (!ArtCatalog.Has(art)) ArtCatalog.TryApply(go, "Props/fragment", Vector2.one * 0.8f);
             var col = go.AddComponent<CircleCollider2D>();
             col.isTrigger = true;
             col.radius = 0.6f;
-            go.AddComponent<MelodyFragment>().Order = order;
+            var frag = go.AddComponent<MelodyFragment>();
+            frag.Order = order;
+            frag.UseCustomArt = ArtCatalog.Has("Props/fragment") || ArtCatalog.Has(art);
             TimeObject.Add(go, presence, Palette.Fragment, Palette.FutureFragment, solid: false);
         }
     }

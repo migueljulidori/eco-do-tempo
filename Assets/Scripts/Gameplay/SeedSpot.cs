@@ -14,10 +14,11 @@ namespace EcoDoTempo
         public static void Create(Transform root, Vector2 pos)
         {
             var soil = LevelBuilder.Block(root, pos, EraPresence.Both, Palette.PastSoil, Palette.FutureSoil);
+            ArtCatalog.TryApply(soil.gameObject, "Tiles/soil", Vector2.one);
             var spot = soil.gameObject.AddComponent<SeedSpot>();
 
-            var saplingGo = SpriteFactory.CreateObject("Sapling", root, pos + new Vector2(0f, 0.75f), new Vector2(0.25f, 0.5f),
-                SpriteFactory.Triangle, Palette.Sapling, 2);
+            var saplingGo = ArtCatalog.Create("Sapling", root, pos + new Vector2(0f, 0.75f), new Vector2(0.25f, 0.5f),
+                SpriteFactory.Triangle, Palette.Sapling, 2, "Props/sapling", Vector2.one * 0.7f);
             spot.sapling = TimeObject.Add(saplingGo, EraPresence.PastOnly, Palette.Sapling, Palette.Sapling, solid: false);
             spot.sapling.ForceHidden = true;
 

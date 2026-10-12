@@ -9,9 +9,10 @@ namespace EcoDoTempo
 
         public static void Create(Transform root, Vector2 pos)
         {
-            var go = SpriteFactory.CreateObject("Lever", root, pos + Vector2.down * 0.15f, new Vector2(0.15f, 0.7f),
-                SpriteFactory.Square, Palette.Lever, 3);
-            go.transform.rotation = Quaternion.Euler(0f, 0f, 30f);
+            var go = ArtCatalog.Create("Lever", root, pos + Vector2.down * 0.15f, new Vector2(0.15f, 0.7f),
+                SpriteFactory.Square, Palette.Lever, 3, "Props/lever", Vector2.one * 0.9f);
+            if (!ArtCatalog.Has("Props/lever"))
+                go.transform.rotation = Quaternion.Euler(0f, 0f, 30f);
             go.AddComponent<BoxCollider2D>().isTrigger = true;
             go.AddComponent<Lever>();
             TimeObject.Add(go, EraPresence.Both, Palette.Lever, Palette.FutureLever, solid: false);
@@ -30,7 +31,12 @@ namespace EcoDoTempo
                 return;
             }
             pulled = true;
-            transform.rotation = Quaternion.Euler(0f, 0f, -30f);
+            if (ArtCatalog.Has("Props/lever_pulled"))
+                ArtCatalog.TryApply(gameObject, "Props/lever_pulled", Vector2.one * 0.9f);
+            else if (!ArtCatalog.Has("Props/lever"))
+                transform.rotation = Quaternion.Euler(0f, 0f, -30f);
+            else
+                transform.rotation = Quaternion.Euler(0f, 0f, -25f);
             gm.OpenGates();
             gm.Synth.PlayNote(220f, 0.4f);
             gm.ShowMessage("Algo pesado se move ao longe. A comporta se abriu... em todas as eras.");
