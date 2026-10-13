@@ -28,6 +28,10 @@ namespace EcoDoTempo
             spot.sapling.ForceHidden = true;
 
             string trunkArt = ArtCatalog.FirstExisting("Tiles/tree_trunk_future", "Tiles/tree_trunk", "Tiles/block_future");
+            // One-block step to the left, then the trunk whose top is level with the ledge.
+            spot.step = LevelBuilder.Block(root, pos + new Vector2(-1f, 1f), EraPresence.FutureOnly,
+                Palette.Tree, Palette.Tree, trunkArt);
+            spot.step.ForceHidden = true;
             for (int i = 0; i < TreeHeight; i++)
             {
                 spot.trunk[i] = LevelBuilder.Block(root, pos + Vector2.up * (i + 1), EraPresence.FutureOnly,
@@ -50,6 +54,7 @@ namespace EcoDoTempo
             }
             planted = true;
             sapling.ForceHidden = false;
+            if (step != null) step.ForceHidden = false;
             foreach (var block in trunk) block.ForceHidden = false;
             gm.ApplyEra();
             gm.Synth.PlayNote(330f, 0.5f);

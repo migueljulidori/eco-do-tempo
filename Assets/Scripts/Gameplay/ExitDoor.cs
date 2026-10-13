@@ -36,7 +36,7 @@ namespace EcoDoTempo
                         ArtCatalog.TryApply(gameObject, "Props/door_open", new Vector2(1.5f, 0f));
                     else if (ArtCatalog.Has("Props/door"))
                         ArtCatalog.TryApply(gameObject, "Props/door", new Vector2(1.5f, 0f));
-                    ArtCatalog.SnapBottomTo(gameObject, ArtCatalog.FloorTop(baseCell));
+                    ArtCatalog.SnapBottomTo(gameObject, ArtCatalog.FloorTop(baseCell), 0f);
                 }
                 sr.color = open
                     ? Color.Lerp(Color.white, new Color(1f, 0.95f, 0.7f), Mathf.PingPong(Time.time, 0.5f))
