@@ -97,7 +97,7 @@ namespace EcoDoTempo
                 Intro = new[]
                 {
                     "Três canteiros marcados na terra. Plante cada um no passado.",
-                    "No futuro as árvores sobem em degraus até a plataforma no centro.",
+                    "No futuro as árvores sobem em degraus do centro até a plataforma à direita.",
                 },
                 Notes = new[]
                 {
@@ -105,19 +105,19 @@ namespace EcoDoTempo
                         "Diário do avô: \"Plantei aqui uma semente de carvalho. Lia, um dia ela será mais alta que nós dois.\"",
                         "Uma placa coberta de musgo: \"Jardim do Relojoeiro. Fechado desde a queda da torre.\""),
                 },
-                // Plataforma no centro, 5 blocos acima do chão.
-                // Canteiros S da esquerda para a direita: árvores de 2, 3 e 4 blocos.
+                // Plataforma na direita, 5 blocos acima do chão.
+                // Canteiros S do centro para a direita: árvores de 2, 3 e 4 blocos.
                 Map = new[]
                 {
                     "..............................",
                     "..............................",
-                    ".............2.D..............",
-                    "...........#########..........",
+                    ".......................2...D..",
+                    ".....................#########",
                     "..............................",
                     "..............................",
                     "..............................",
-                    "@1.i..*......................",
-                    "##S##S##S#####################",
+                    "@..1.i.*......................",
+                    "############S##S##S###########",
                 },
             },
             new LevelDefinition

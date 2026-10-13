@@ -5,8 +5,9 @@ namespace EcoDoTempo
     // Past = warm sepia, Future = cold neon.
     public static class Palette
     {
-        public static readonly Color PastBackground = new Color(0.20f, 0.13f, 0.08f);
-        public static readonly Color FutureBackground = new Color(0.04f, 0.06f, 0.13f);
+        // Near-black clears so the painted backdrop can fill the screen without letterbox bars.
+        public static readonly Color PastBackground = new Color(0.05f, 0.04f, 0.03f);
+        public static readonly Color FutureBackground = new Color(0.03f, 0.04f, 0.06f);
 
         public static readonly Color PastWall = new Color(0.55f, 0.40f, 0.25f);
         public static readonly Color FutureWall = new Color(0.22f, 0.30f, 0.45f);

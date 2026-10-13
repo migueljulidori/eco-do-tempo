@@ -3,7 +3,7 @@ using UnityEngine;
 namespace EcoDoTempo
 {
     // Backdrop from Resources/Backgrounds/{key}_past|_future.
-    // Keeps aspect ratio and aligns the painted ledge with the gameplay floor.
+    // Covers the full camera view (no letterbox bars) and aligns the painted ledge with the floor.
     public class LevelBackground : MonoBehaviour
     {
         SpriteRenderer sr;
@@ -14,6 +14,8 @@ namespace EcoDoTempo
         // Lit lip of the painted floor on salao_past (fraction up from the bottom).
         const float PastLedgeFromBottom = 0.26f;
         const float FutureLedgeFromBottom = 0.26f;
+        // Extra padding so the plate still covers after camera clamp / aspect changes.
+        const float CoverPad = 2f;
 
         public static LevelBackground Create(Transform root, string backgroundKey, Vector2Int size, float floorTopY)
         {
@@ -47,8 +49,18 @@ namespace EcoDoTempo
             float spriteW = Mathf.Max(0.01f, sprite.bounds.size.x);
             float spriteH = Mathf.Max(0.01f, sprite.bounds.size.y);
 
-            // Fit width to the level; never stretch.
-            float scale = levelSize.x / spriteW;
+            // Cover the camera: at least the level width and the full orthographic view.
+            float halfH = 6f;
+            float aspect = 16f / 9f;
+            var cam = Camera.main;
+            if (cam != null && cam.orthographic)
+            {
+                halfH = cam.orthographicSize;
+                aspect = Mathf.Max(0.1f, cam.aspect);
+            }
+            float coverW = Mathf.Max(levelSize.x, halfH * aspect * 2f) + CoverPad;
+            float coverH = halfH * 2f + CoverPad;
+            float scale = Mathf.Max(coverW / spriteW, coverH / spriteH);
             transform.localScale = new Vector3(scale, scale, 1f);
 
             float scaledH = spriteH * scale;
