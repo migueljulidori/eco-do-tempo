@@ -36,11 +36,12 @@ Inspector: Texture Type `Sprite (2D and UI)`, Mode `Multiple`, Filter `Point`, P
 | `fragment.png` | fragmentos da canção `*` / `1` / `2` |
 | `fragment_future.png` | (opcional) fragmento só no futuro |
 | `inspect.png` | objetos para examinar `i` |
-| `lever.png` | alavanca `L` |
+| `lever.png` | alavanca `L` / `A` / `B` |
 | `lever_pulled.png` | (opcional) alavanca puxada |
 | `door.png` | porta fechada `D` |
 | `door_open.png` | (opcional) porta aberta |
 | `sapling.png` | muda plantada `S` |
+| `blockade.png` | comporta `G` / `a` / `b` |
 
 ### Chão / blocos (`Resources/Tiles/`)
 | Arquivo | O quê |
@@ -60,8 +61,9 @@ Inspector dos tiles/props: Texture Type `Sprite (2D and UI)`, Mode `Single` (til
 ### Fundos (`Resources/Backgrounds/`)
 | Arquivo | Fase |
 | --- | --- |
-| `salao_past.png` | Salão do Relógio (passado) |
-| `salao_future.png` | Salão do Relógio (futuro, opcional) |
+| `salao_past.png` / `salao_future.png` | Salão do Relógio |
+| `jardim_past.png` / `jardim_future.png` | Jardim Esquecido |
+| `oficina_past.png` / `oficina_future.png` | A Oficina (ainda sem arte) |
 
 Inspector do fundo: Sprite (2D and UI), Mode `Single`, Filter `Point` (ou Bilinear se a arte for grande), Compression `None`.
 
@@ -70,3 +72,5 @@ Sugestão tiles/props: canvas **32×32** (porta pode ser **32×64**). Filter Mod
 ## Criando fases
 
 As fases ficam em `Assets/Scripts/Level/LevelData.cs`, desenhadas em texto (ASCII). A legenda está no comentário de `LevelDefinition`.
+
+Alavancas e comportas usam **canais**: `L` abre só `G`, `A` abre só `a`, `B` abre só `b`. Assim dá para fazer puzzles em etapas (uma comporta por alavanca).

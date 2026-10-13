@@ -2,13 +2,14 @@ using UnityEngine;
 
 namespace EcoDoTempo
 {
-    // Only works in the past; its effect (open gates) carries over to the future.
+    // Only works in the past; opens gates on the same channel in every era.
     public class Lever : MonoBehaviour, IInteractable
     {
         bool pulled;
         Vector2 cell;
+        int channel;
 
-        public static void Create(Transform root, Vector2 pos)
+        public static void Create(Transform root, Vector2 pos, int channel = 0)
         {
             var go = ArtCatalog.Create("Lever", root, pos, new Vector2(0.15f, 0.7f),
                 SpriteFactory.Square, Palette.Lever, 3, "Props/lever", Vector2.one * 0.9f);
@@ -19,10 +20,12 @@ namespace EcoDoTempo
             go.AddComponent<BoxCollider2D>().isTrigger = true;
             var lever = go.AddComponent<Lever>();
             lever.cell = pos;
+            lever.channel = channel;
             TimeObject.Add(go, EraPresence.Both, Palette.Lever, Palette.FutureLever, solid: false);
         }
 
-        public string Prompt(Era era) => pulled ? "A alavanca já foi puxada" : "E: puxar alavanca";
+        public string Prompt(Era era) =>
+            pulled ? "A alavanca já foi puxada" : "E: puxar alavanca";
 
         public void Interact(Era era)
         {
@@ -42,9 +45,12 @@ namespace EcoDoTempo
             }
             else if (!ArtCatalog.Has("Props/lever"))
                 transform.rotation = Quaternion.Euler(0f, 0f, -30f);
-            gm.OpenGates();
-            gm.Synth.PlayNote(220f, 0.4f);
-            gm.ShowMessage("Algo pesado se move ao longe. A comporta se abriu... em todas as eras.");
+            gm.OpenGates(channel);
+            gm.Synth.PlayNote(220f + channel * 40f, 0.4f);
+            string which = channel <= 0 ? "A comporta da oficina"
+                : channel == 1 ? "A segunda comporta"
+                : "Uma comporta distante";
+            gm.ShowMessage($"{which} se abriu... em todas as eras.");
         }
     }
 }

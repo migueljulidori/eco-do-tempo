@@ -5,8 +5,11 @@ namespace EcoDoTempo
     public class Gate : MonoBehaviour
     {
         TimeObject timeObject;
+        int channel;
 
-        public static void Create(Transform root, Vector2 pos)
+        public int Channel => channel;
+
+        public static void Create(Transform root, Vector2 pos, int channel = 0)
         {
             string art = ArtCatalog.Has("Props/blockade") ? "Props/blockade"
                        : ArtCatalog.Has("Tiles/gate") ? "Tiles/gate"
@@ -31,6 +34,7 @@ namespace EcoDoTempo
 
             var gate = block.gameObject.AddComponent<Gate>();
             gate.timeObject = block;
+            gate.channel = channel;
             GameManager.Instance.RegisterGate(gate);
         }
 

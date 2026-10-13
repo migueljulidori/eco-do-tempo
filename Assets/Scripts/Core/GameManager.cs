@@ -306,9 +306,11 @@ namespace EcoDoTempo
             ShowMessage("O eco te trouxe de volta ao início.");
         }
 
-        public void OpenGates()
+        public void OpenGates(int channel = 0)
         {
-            foreach (var gate in gates) gate.Open();
+            foreach (var gate in gates)
+                if (gate != null && gate.Channel == channel)
+                    gate.Open();
             ApplyEra();
         }
 

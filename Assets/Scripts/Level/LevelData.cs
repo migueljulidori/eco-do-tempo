@@ -25,7 +25,7 @@ namespace EcoDoTempo
         //  #  wall in both eras          p  block only in the past     f  block only in the future
         //  ^  spikes                     @  player start               D  exit door
         //  *  melody fragment (both)     1  fragment only in the past  2  fragment only in the future
-        //  L  lever (works in the past)  G  gate opened by the lever
+        //  L/G  lever + gate channel 0   A/a channel 1   B/b channel 2
         //  S  soil: plant in the past, a tree grows in the future
         //  i  inspectable object (texts come from Notes, in reading order)
         public string[] Map;
@@ -123,30 +123,39 @@ namespace EcoDoTempo
             new LevelDefinition
             {
                 Name = "A Oficina",
+                Background = "oficina",
                 Intro = new[]
                 {
-                    "A oficina do relojoeiro. Uma comporta pesada bloqueia a saída.",
-                    "O que você muda no passado permanece no futuro.",
+                    "A oficina do avô tem duas comportas. Cada alavanca move só a sua — como as fechaduras da torre.",
+                    "Cruze as eras para achar o caminho. O que você muda no passado permanece no futuro.",
                 },
                 Notes = new[]
                 {
                     new InspectNote(
-                        "Uma bancada cheia de engrenagens. Um bilhete: \"A alavanca abre a comporta da torre. Cuide para que nunca enferruje.\"",
-                        "A bancada apodreceu. Entre as engrenagens, um desenho infantil: Lia e o avô em frente ao relógio."),
+                        "Diário de bancada: \"Comporta da forja = alavanca perto do fosso. Comporta do depósito = alavanca do mezanino. Nunca enferrujar.\"",
+                        "O diário virou pó. Só resta um desenho infantil: Lia e o avô diante de duas portas abertas."),
                 },
+                // Puzzle box (hub → comporta 0 → mezanino → comporta 1 → saída):
+                // 1) Futuro: atravessar a ponte f sobre o fosso; pegar o fragmento 2.
+                // 2) Passado: puxar L (canal 0) → abre GGG.
+                // 3) Passado: subir os degraus p e pegar o fragmento 1.
+                // 4) Futuro: subir a escada f até o mezanino ####, trocar para o passado, puxar A.
+                // 5) Comporta aaa abre; pegar * e sair pela porta.
                 Map = new[]
                 {
-                    "..................................",
-                    ".................p..........G.....",
-                    ".................p......1...G.....",
-                    ".................p..........G.....",
-                    ".................p......p...G.....",
-                    ".................p..........G.....",
-                    "..........2......p....p.....G.....",
-                    "..@.i............p...L......G.*.D.",
-                    "########ffffff####################",
-                    "........^^^^^^....................",
-                    "........######....................",
+                    "..........................................",
+                    "......................1....####...........",
+                    ".....................pp....#A.#...........",
+                    "..........2...........p....#ff#...........",
+                    ".........fff..........p.....ff............",
+                    "......................p....f.f............",
+                    "..................GGG.p...f...............",
+                    "....i.............GGG.p..f...aaa..........",
+                    "..@...............GGG...f....aaa.....*..D.",
+                    "............L..........f.....aaa..........",
+                    "######fffff###############################",
+                    "......^^^^^...............................",
+                    "......#####...............................",
                 },
             },
             new LevelDefinition

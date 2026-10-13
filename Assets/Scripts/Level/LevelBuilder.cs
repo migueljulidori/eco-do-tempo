@@ -80,8 +80,12 @@ namespace EcoDoTempo
                         case '1': Fragment(root, pos, EraPresence.PastOnly, result.FragmentCount++); break;
                         case '2': Fragment(root, pos, EraPresence.FutureOnly, result.FragmentCount++); break;
                         case 'D': ExitDoor.Create(root, pos); break;
-                        case 'L': Lever.Create(root, pos); break;
-                        case 'G': Gate.Create(root, pos); break;
+                        case 'L': Lever.Create(root, pos, 0); break;
+                        case 'G': Gate.Create(root, pos, 0); break;
+                        case 'A': Lever.Create(root, pos, 1); break;
+                        case 'a': Gate.Create(root, pos, 1); break;
+                        case 'B': Lever.Create(root, pos, 2); break;
+                        case 'b': Gate.Create(root, pos, 2); break;
                         case 'S':
                             SeedSpot.Create(root, pos, 2 + plantOrdinal);
                             plantOrdinal++;
