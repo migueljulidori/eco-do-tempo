@@ -5,7 +5,7 @@ namespace EcoDoTempo
     // A seed planted in the past becomes a tree (platform) in the future.
     public class SeedSpot : MonoBehaviour, IInteractable
     {
-        const int TreeHeight = 2;
+        const int TreeHeight = 3;
 
         bool planted;
         TimeObject sapling;
