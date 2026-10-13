@@ -1,0 +1,9 @@
+lia_idle.png | 128×32 | 4 frames32×32 transparent | pivot same as lia_walk. Breathing idle, approximate reference appearance. Multiple, Slice32×32 padding0, PPU32, Point, Compression None. Animator clip Idle Loop Time ON, about4 frames/second for a1second cycle. Activate when grounded and horizontal speed near zero; jump overrides idle. Does not include installed Animator or code changes. Keep same pivot across walk jump idle.
+floor_grass_past/future.png | 32×32 each | opaque | Center | grass/earth live and dead.
+floor_slab_past/future.png | 32×32 each | opaque | Center | stone slabs with moss or dead moss.
+floor_soil_past/future.png | 32×32 each | opaque | Center | planting soil warm/wet and cold/dry.
+floor_cobble_past/future.png | 32×32 each | opaque | Center | cobblestone and moss.
+floor_pebbles_past/future.png | 32×32 each | opaque | Center | turf soil and small stones.
+garden_floors_tileset.png | 160×64 | opaque | Multiple Slice32×32 padding0. Past top row, future bottom. Order grass slab soil cobble pebbles. Individual tiles Single. PPU32, Point, Compression None, mipmaps off. Ground top is flush opaque to canvas boundary; surface detail is decorative, set colliders flat. Tiles are for surface row; use plain soil/stone existing tiles below rather than repeat grass vertically. Seamless texture matching not guaranteed.
+jardim_past_1472x576.png / jardim_future_1472x576.png | 1472×576 opaque | Center | revised garden vegetation. Ground y426 with150px foundation below, right terrace remains separate existing gameplay object. Single PPU128 Point Compression None mipmaps off, identical Transform. Uniform nearest-neighbor scale and center crop.
+All created with imagegen. Exact dimensions and opacity/transparency verified. Small generated differences between era outlines and original Lia remain; not tested in Unity. Generated breathing can produce small sprite jitter; check alongside existing walking animation.

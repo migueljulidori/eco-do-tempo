@@ -180,7 +180,9 @@ namespace EcoDoTempo
             string future;
             if (tileset == "garden")
             {
-                if (airAbove) ArtCatalog.PickGardenFloor(out past, out future);
+                bool floating = airAbove && row + 1 < height && !IsSolidChar(CharAt(map, row + 1, col, height));
+                if (floating) ArtCatalog.PickGardenLedge(out past, out future);
+                else if (airAbove) ArtCatalog.PickGardenFloor(pos, out past, out future);
                 else ArtCatalog.PickGardenWall(out past, out future);
             }
             else if (airAbove) ArtCatalog.PickFloorPair(pos, out past, out future);

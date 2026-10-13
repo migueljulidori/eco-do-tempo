@@ -33,6 +33,7 @@ echo "Origem: $SRC"
 echo "== Characters =="
 map_copy Characters/lia_walk.png lia_walk.png lia.png
 map_copy Characters/lia_jump.png lia_jump.png
+map_copy Characters/lia_idle.png lia_idle.png
 echo "== Props =="
 for pair in \
   "Props/spikes.png:spikes.png" \
@@ -73,6 +74,17 @@ for pair in \
   "Tiles/soil_future.png:soil_future.png" \
   "Tiles/floor_garden_past.png:floor_garden_past.png" \
   "Tiles/floor_garden_future.png:floor_garden_future.png" \
+  "Tiles/floor_grass_past.png:floor_grass_past.png" \
+  "Tiles/floor_grass_future.png:floor_grass_future.png" \
+  "Tiles/floor_slab_past.png:floor_slab_past.png" \
+  "Tiles/floor_slab_future.png:floor_slab_future.png" \
+  "Tiles/floor_soil_past.png:floor_soil_past.png" \
+  "Tiles/floor_soil_future.png:floor_soil_future.png" \
+  "Tiles/floor_cobble_past.png:floor_cobble_past.png" \
+  "Tiles/floor_cobble_future.png:floor_cobble_future.png" \
+  "Tiles/floor_pebbles_past.png:floor_pebbles_past.png" \
+  "Tiles/floor_pebbles_future.png:floor_pebbles_future.png" \
+  "Tiles/garden_floors_tileset.png:garden_floors_tileset.png" \
   "Tiles/wall_garden_past.png:wall_garden_past.png" \
   "Tiles/wall_garden_future.png:wall_garden_future.png" \
   "Tiles/tree_trunk.png:tree_trunk.png" \

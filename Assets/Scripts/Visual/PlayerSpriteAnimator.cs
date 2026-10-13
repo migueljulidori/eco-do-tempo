@@ -22,7 +22,10 @@ namespace EcoDoTempo
         SpriteRenderer sr;
         Sprite[] frames;
         Sprite[] jumpFrames;
+        Sprite[] idleFrames;
         float timer;
+        float idleTimer;
+        int idleIndex;
         float airborneTime;
         float landTimer;
         int index;
@@ -33,7 +36,9 @@ namespace EcoDoTempo
         {
             var sprites = LoadWalkSprites();
             var jumps = LoadJumpFrames();
-            if ((sprites == null || sprites.Length == 0) && (jumps == null || jumps.Length == 0))
+            var idles = LoadIdleFrames();
+            if ((sprites == null || sprites.Length == 0) && (jumps == null || jumps.Length == 0)
+                && (idles == null || idles.Length == 0))
             {
                 Debug.LogWarning(
                     "[Eco do Tempo] Sprite da Lia não encontrado. Coloque o PNG em:\n" +
@@ -46,7 +51,9 @@ namespace EcoDoTempo
             var sr = body.GetComponent<SpriteRenderer>();
             if (sr == null) return null;
 
-            var first = sprites != null && sprites.Length > 0 ? sprites[0] : jumps[0];
+            var first = sprites != null && sprites.Length > 0 ? sprites[0]
+                : idles != null && idles.Length > 0 ? idles[0]
+                : jumps[0];
             sr.sprite = first;
             sr.color = Color.white;
             FitHeight(body.transform, sr, first);
@@ -55,7 +62,8 @@ namespace EcoDoTempo
             anim.sr = sr;
             anim.frames = sprites ?? Array.Empty<Sprite>();
             anim.jumpFrames = jumps ?? Array.Empty<Sprite>();
-            Debug.Log($"[Eco do Tempo] Lia: {anim.frames.Length} frame(s) de andar, {anim.jumpFrames.Length} de pulo.");
+            anim.idleFrames = idles ?? Array.Empty<Sprite>();
+            Debug.Log($"[Eco do Tempo] Lia: {anim.frames.Length} andar, {anim.idleFrames.Length} parada, {anim.jumpFrames.Length} pulo.");
             return anim;
         }
 
@@ -80,19 +88,25 @@ namespace EcoDoTempo
 
             var any = Resources.LoadAll<Sprite>("Characters");
             if (any == null || any.Length == 0) return Array.Empty<Sprite>();
-            var walk = any.Where(s => s.texture != null && !s.texture.name.Contains("jump")).ToArray();
+            var walk = any.Where(s => s.texture != null
+                && s.texture.name.IndexOf("jump", StringComparison.OrdinalIgnoreCase) < 0
+                && s.texture.name.IndexOf("idle", StringComparison.OrdinalIgnoreCase) < 0).ToArray();
             if (walk.Length == 0) return Array.Empty<Sprite>();
             var byTexture = walk.GroupBy(s => s.texture).OrderByDescending(g => g.Count());
             return SortFrames(byTexture.First().ToArray());
         }
 
-        static Sprite[] LoadJumpFrames()
+        static Sprite[] LoadJumpFrames() => LoadSheet("Characters/lia_jump", 5);
+
+        static Sprite[] LoadIdleFrames() => LoadSheet("Characters/lia_idle", 4);
+
+        static Sprite[] LoadSheet(string path, int minFrames)
         {
-            var sliced = Resources.LoadAll<Sprite>("Characters/lia_jump");
-            if (sliced != null && sliced.Length >= 5 && sliced[0].rect.width <= JumpFrameSize + 1f)
+            var sliced = Resources.LoadAll<Sprite>(path);
+            if (sliced != null && sliced.Length >= minFrames && sliced[0].rect.width <= JumpFrameSize + 1f)
                 return SortFrames(sliced);
 
-            var tex = Resources.Load<Texture2D>("Characters/lia_jump");
+            var tex = Resources.Load<Texture2D>(path);
             if (tex == null) return Array.Empty<Sprite>();
             return SliceHorizontal(tex, JumpFrameSize);
         }
@@ -128,6 +142,21 @@ namespace EcoDoTempo
                 return;
 
             wasGrounded = grounded;
+            if (grounded && Mathf.Abs(horizontal) < 0.01f && idleFrames != null && idleFrames.Length > 0)
+            {
+                idleTimer += Time.deltaTime;
+                float idleStep = 1f / 4f;
+                while (idleTimer >= idleStep)
+                {
+                    idleTimer -= idleStep;
+                    idleIndex = (idleIndex + 1) % idleFrames.Length;
+                }
+                sr.sprite = idleFrames[idleIndex];
+                return;
+            }
+            idleTimer = 0f;
+            idleIndex = 0;
+
             if (frames == null || frames.Length == 0)
             {
                 if (jumpFrames != null && jumpFrames.Length > 0)

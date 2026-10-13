@@ -74,10 +74,22 @@ namespace EcoDoTempo
                 : FirstExisting("Tiles/block_metal_future", "Tiles/block_stone_future");
         }
 
-        public static void PickGardenFloor(out string past, out string future)
+        public static void PickGardenFloor(Vector2 pos, out string past, out string future)
         {
-            past = FirstExisting("Tiles/floor_garden_past", "Tiles/floor_a", "Tiles/block_stone_past");
-            future = FirstExisting("Tiles/floor_garden_future", "Tiles/block_stone_future", "Tiles/floor_garden_past");
+            int x = Mathf.RoundToInt(pos.x);
+            // Planting bed, cobble path, then grass with a few pebble breaks.
+            string kind = (x >= 20 && x <= 23) ? "soil"
+                : (x >= 5 && x <= 16) ? "cobble"
+                : (x % 6 == 0) ? "pebbles"
+                : "grass";
+            past = FirstExisting("Tiles/floor_" + kind + "_past", "Tiles/floor_grass_past", "Tiles/floor_garden_past");
+            future = FirstExisting("Tiles/floor_" + kind + "_future", "Tiles/floor_grass_future", "Tiles/floor_garden_future");
+        }
+
+        public static void PickGardenLedge(out string past, out string future)
+        {
+            past = FirstExisting("Tiles/floor_slab_past", "Tiles/floor_cobble_past", "Tiles/floor_grass_past");
+            future = FirstExisting("Tiles/floor_slab_future", "Tiles/floor_cobble_future", "Tiles/floor_grass_future");
         }
 
         public static void PickGardenWall(out string past, out string future)

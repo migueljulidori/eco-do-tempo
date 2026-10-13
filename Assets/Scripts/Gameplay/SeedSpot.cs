@@ -13,8 +13,8 @@ namespace EcoDoTempo
 
         public static void Create(Transform root, Vector2 pos)
         {
-            string soilPast = ArtCatalog.FirstExisting("Tiles/soil", "Tiles/floor_garden_past");
-            string soilFuture = ArtCatalog.FirstExisting("Tiles/soil_future", "Tiles/soil", soilPast);
+            string soilPast = ArtCatalog.FirstExisting("Tiles/floor_soil_past", "Tiles/soil", "Tiles/floor_grass_past");
+            string soilFuture = ArtCatalog.FirstExisting("Tiles/floor_soil_future", "Tiles/soil_future", "Tiles/floor_soil_past");
             var soil = LevelBuilder.Block(root, pos, EraPresence.Both, Palette.PastSoil, Palette.FutureSoil, soilPast);
             ArtCatalog.SetEraArt(soil.gameObject, soilPast, soilFuture, Vector2.one);
             var spot = soil.gameObject.AddComponent<SeedSpot>();
