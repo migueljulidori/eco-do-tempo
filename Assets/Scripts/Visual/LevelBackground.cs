@@ -49,7 +49,8 @@ namespace EcoDoTempo
             float spriteW = Mathf.Max(0.01f, sprite.bounds.size.x);
             float spriteH = Mathf.Max(0.01f, sprite.bounds.size.y);
 
-            // Cover the camera: at least the level width and the full orthographic view.
+            // Fit the level width. Avoid height-upscaling: that thickens the painted
+            // under-floor masonry into a brown bar. Side/top gaps use the near-black clear.
             float halfH = 6f;
             float aspect = 16f / 9f;
             var cam = Camera.main;
@@ -59,8 +60,7 @@ namespace EcoDoTempo
                 aspect = Mathf.Max(0.1f, cam.aspect);
             }
             float coverW = Mathf.Max(levelSize.x, halfH * aspect * 2f) + CoverPad;
-            float coverH = halfH * 2f + CoverPad;
-            float scale = Mathf.Max(coverW / spriteW, coverH / spriteH);
+            float scale = coverW / spriteW;
             transform.localScale = new Vector3(scale, scale, 1f);
 
             float scaledH = spriteH * scale;

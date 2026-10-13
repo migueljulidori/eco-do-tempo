@@ -187,7 +187,7 @@ namespace EcoDoTempo
 
             levelBackground = LevelBackground.Create(levelRoot.transform, Level.Background, levelSize, result.FloorTopY);
             Player = PlayerController.Create(result.Spawn, levelRoot.transform);
-            camFollow.SetTarget(Player.transform, levelSize);
+            camFollow.SetTarget(Player.transform, levelSize, result.FloorTopY);
 
             CurrentEra = Level.StartEra;
             autoSwitchTimer = 0f;

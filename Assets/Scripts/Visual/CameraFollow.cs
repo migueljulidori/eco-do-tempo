@@ -5,15 +5,19 @@ namespace EcoDoTempo
     public class CameraFollow : MonoBehaviour
     {
         const float Smoothing = 6f;
+        // How much world below the walkable floor stays on screen (spikes / pit lip).
+        const float UnderFloorVisible = 1.75f;
 
         Transform target;
         Vector2Int levelSize;
+        float floorTopY;
         Camera cam;
 
-        public void SetTarget(Transform newTarget, Vector2Int size)
+        public void SetTarget(Transform newTarget, Vector2Int size, float floorTop = 0f)
         {
             target = newTarget;
             levelSize = size;
+            floorTopY = floorTop;
             cam = GetComponent<Camera>();
             transform.position = Clamp(target.position);
         }
@@ -32,7 +36,21 @@ namespace EcoDoTempo
             float minX = -0.5f + halfW, maxX = levelSize.x - 0.5f - halfW;
             float minY = -0.5f + halfH, maxY = levelSize.y - 0.5f - halfH;
             float x = minX > maxX ? (levelSize.x - 1) * 0.5f : Mathf.Clamp(wanted.x, minX, maxX);
-            float y = minY > maxY ? (levelSize.y - 1) * 0.5f : Mathf.Clamp(wanted.y, minY, maxY);
+
+            float y;
+            if (minY > maxY)
+            {
+                // Level shorter than the view: pin the floor near the bottom so the
+                // painted under-floor masonry is cropped instead of forming a brown bar.
+                float pinned = floorTopY - UnderFloorVisible + halfH;
+                float centerY = (levelSize.y - 1) * 0.5f;
+                y = floorTopY > 0f ? pinned : centerY;
+            }
+            else
+            {
+                y = Mathf.Clamp(wanted.y, minY, maxY);
+            }
+
             return new Vector3(x, y, -10f);
         }
     }
