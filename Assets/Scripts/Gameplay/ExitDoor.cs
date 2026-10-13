@@ -16,7 +16,7 @@ namespace EcoDoTempo
             bool art = ArtCatalog.Has("Props/door") || ArtCatalog.Has("Props/door_open");
             var go = ArtCatalog.Create("Door", root, pos, new Vector2(0.9f, 1.9f),
                 SpriteFactory.Square, Palette.DoorLocked, 3, "Props/door", new Vector2(1.5f, 0f));
-            if (art) ArtCatalog.SnapBottomTo(go, ArtCatalog.FloorTop(pos));
+            if (art) ArtCatalog.SnapBottomTo(go, ArtCatalog.FloorTop(pos), 0f);
             go.AddComponent<BoxCollider2D>().isTrigger = true;
             var door = go.AddComponent<ExitDoor>();
             door.sr = go.GetComponent<SpriteRenderer>();

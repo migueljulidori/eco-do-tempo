@@ -105,15 +105,14 @@ namespace EcoDoTempo
                         "Diário do avô: \"Plantei aqui uma semente de carvalho. Lia, um dia ela será mais alta que nós dois.\"",
                         "Uma placa coberta de musgo: \"Jardim do Relojoeiro. Fechado desde a queda da torre.\""),
                 },
-                // Piso inteiro no chão pintado. Mureta só na direita, onde a arte já sobe.
-                // O tronco (col. 23) fica um tile abaixo dela: sem a árvore, o pulo não alcança.
+                // Mureta na altura do topo do carvalho (2 blocos). Dá para subir nele e andar até a porta.
                 Map = new[]
                 {
                     "..............................",
                     "..............................",
+                    "..............................",
                     ".........................2.D..",
                     "........................######",
-                    "..............................",
                     ".1....@.........*....i........",
                     "#######################S######",
                 },
