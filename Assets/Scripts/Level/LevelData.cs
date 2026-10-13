@@ -96,8 +96,8 @@ namespace EcoDoTempo
                 Tileset = "garden",
                 Intro = new[]
                 {
-                    "O jardim onde o avô passava as tardes. Algumas coisas levam anos para crescer...",
-                    "Use E para interagir com objetos.",
+                    "O jardim onde o avô passava as tardes. A mureta da direita guarda a saída.",
+                    "Plante a semente no passado. No futuro, o carvalho alcança a mureta.",
                 },
                 Notes = new[]
                 {
@@ -105,17 +105,17 @@ namespace EcoDoTempo
                         "Diário do avô: \"Plantei aqui uma semente de carvalho. Lia, um dia ela será mais alta que nós dois.\"",
                         "Uma placa coberta de musgo: \"Jardim do Relojoeiro. Fechado desde a queda da torre.\""),
                 },
-                // Piso contínuo. O tronco, depois de plantar, é o degrau até o terraço.
+                // Piso inteiro no chão pintado. Mureta só na direita, onde a arte já sobe.
+                // O tronco (col. 23) fica um tile abaixo dela: sem a árvore, o pulo não alcança.
                 Map = new[]
                 {
                     "..............................",
                     "..............................",
+                    ".........................2.D..",
+                    "........................######",
                     "..............................",
-                    "...................2..*...D...",
-                    "...................###########",
-                    "..............................",
-                    ".1......@....i................",
-                    "##################S###########",
+                    ".1....@.........*....i........",
+                    "#######################S######",
                 },
             },
             new LevelDefinition
