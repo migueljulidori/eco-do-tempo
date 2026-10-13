@@ -32,6 +32,7 @@ map_copy() {
 echo "Origem: $SRC"
 echo "== Characters =="
 map_copy Characters/lia_walk.png lia_walk.png lia.png
+map_copy Characters/lia_jump.png lia_jump.png
 echo "== Props =="
 for pair in \
   "Props/spikes.png:spikes.png" \

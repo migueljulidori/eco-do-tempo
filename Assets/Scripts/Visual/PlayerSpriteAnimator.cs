@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace EcoDoTempo
 {
-    // Plays a walk sheet from Resources/Characters (any PNG, prefers lia_walk).
+    // Walk sheet plus the five-frame jump sheet (prep, rise, apex, fall, land).
     public class PlayerSpriteAnimator : MonoBehaviour
     {
         static readonly string[] PreferredPaths =
@@ -17,17 +17,23 @@ namespace EcoDoTempo
 
         const float FramesPerSecond = 10f;
         const float TargetHeight = 0.95f;
+        const int JumpFrameSize = 32;
 
         SpriteRenderer sr;
         Sprite[] frames;
+        Sprite[] jumpFrames;
         float timer;
+        float airborneTime;
+        float landTimer;
         int index;
         bool facingRight = true;
+        bool wasGrounded = true;
 
         public static PlayerSpriteAnimator TryAttach(GameObject body)
         {
             var sprites = LoadWalkSprites();
-            if (sprites == null || sprites.Length == 0)
+            var jumps = LoadJumpFrames();
+            if ((sprites == null || sprites.Length == 0) && (jumps == null || jumps.Length == 0))
             {
                 Debug.LogWarning(
                     "[Eco do Tempo] Sprite da Lia não encontrado. Coloque o PNG em:\n" +
@@ -40,15 +46,16 @@ namespace EcoDoTempo
             var sr = body.GetComponent<SpriteRenderer>();
             if (sr == null) return null;
 
-            Debug.Log($"[Eco do Tempo] Lia usando {sprites.Length} frame(s) de '{sprites[0].texture.name}'.");
-
-            sr.sprite = sprites[0];
+            var first = sprites != null && sprites.Length > 0 ? sprites[0] : jumps[0];
+            sr.sprite = first;
             sr.color = Color.white;
-            FitHeight(body.transform, sr, sprites[0]);
+            FitHeight(body.transform, sr, first);
 
             var anim = body.AddComponent<PlayerSpriteAnimator>();
             anim.sr = sr;
-            anim.frames = sprites;
+            anim.frames = sprites ?? Array.Empty<Sprite>();
+            anim.jumpFrames = jumps ?? Array.Empty<Sprite>();
+            Debug.Log($"[Eco do Tempo] Lia: {anim.frames.Length} frame(s) de andar, {anim.jumpFrames.Length} de pulo.");
             return anim;
         }
 
@@ -65,32 +72,68 @@ namespace EcoDoTempo
             foreach (var path in PreferredPaths)
             {
                 var sprites = Resources.LoadAll<Sprite>(path);
-                if (sprites != null && sprites.Length > 0)
+                if (sprites != null && sprites.Length > 1)
                     return SortFrames(sprites);
+                if (sprites != null && sprites.Length == 1 && sprites[0].rect.width <= JumpFrameSize + 1f)
+                    return sprites;
             }
 
-            // Any sprite sheet inside Resources/Characters/
             var any = Resources.LoadAll<Sprite>("Characters");
             if (any == null || any.Length == 0) return Array.Empty<Sprite>();
-
-            var byTexture = any.GroupBy(s => s.texture).OrderByDescending(g => g.Count());
+            var walk = any.Where(s => s.texture != null && !s.texture.name.Contains("jump")).ToArray();
+            if (walk.Length == 0) return Array.Empty<Sprite>();
+            var byTexture = walk.GroupBy(s => s.texture).OrderByDescending(g => g.Count());
             return SortFrames(byTexture.First().ToArray());
+        }
+
+        static Sprite[] LoadJumpFrames()
+        {
+            var sliced = Resources.LoadAll<Sprite>("Characters/lia_jump");
+            if (sliced != null && sliced.Length >= 5 && sliced[0].rect.width <= JumpFrameSize + 1f)
+                return SortFrames(sliced);
+
+            var tex = Resources.Load<Texture2D>("Characters/lia_jump");
+            if (tex == null) return Array.Empty<Sprite>();
+            return SliceHorizontal(tex, JumpFrameSize);
+        }
+
+        static Sprite[] SliceHorizontal(Texture2D tex, int frame)
+        {
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode = TextureWrapMode.Clamp;
+            int count = Mathf.Max(1, tex.width / frame);
+            var frames = new Sprite[count];
+            for (int i = 0; i < count; i++)
+            {
+                frames[i] = Sprite.Create(tex, new Rect(i * frame, 0, frame, frame), new Vector2(0.5f, 0.5f), frame);
+                frames[i].name = tex.name + "_" + i;
+            }
+            return frames;
         }
 
         static Sprite[] SortFrames(Sprite[] sprites)
         {
-            return sprites
-                .OrderBy(s => s.name, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+            return sprites.OrderBy(s => s.name, StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
-        public void Tick(float horizontal, bool grounded)
+        public void Tick(float horizontal, bool grounded, float verticalVelocity)
         {
-            if (sr == null || frames == null || frames.Length == 0) return;
+            if (sr == null) return;
 
             if (horizontal > 0.01f) facingRight = true;
             else if (horizontal < -0.01f) facingRight = false;
             sr.flipX = !facingRight;
+
+            if (jumpFrames != null && jumpFrames.Length >= 5 && ShowJump(grounded, verticalVelocity))
+                return;
+
+            wasGrounded = grounded;
+            if (frames == null || frames.Length == 0)
+            {
+                if (jumpFrames != null && jumpFrames.Length > 0)
+                    sr.sprite = jumpFrames[Mathf.Min(4, jumpFrames.Length - 1)];
+                return;
+            }
 
             bool walking = grounded && Mathf.Abs(horizontal) > 0.01f;
             if (!walking || frames.Length == 1)
@@ -109,6 +152,37 @@ namespace EcoDoTempo
                 index = (index + 1) % frames.Length;
                 sr.sprite = frames[index];
             }
+        }
+
+        // prep, rise, apex, fall, then a short land pose.
+        bool ShowJump(bool grounded, float verticalVelocity)
+        {
+            if (!grounded)
+            {
+                if (wasGrounded) airborneTime = 0f;
+                wasGrounded = false;
+                landTimer = 0f;
+                airborneTime += Time.deltaTime;
+                int frame = airborneTime < 0.08f ? 0
+                    : verticalVelocity > 1.2f ? 1
+                    : verticalVelocity < -1.2f ? 3
+                    : 2;
+                sr.sprite = jumpFrames[frame];
+                return true;
+            }
+
+            if (!wasGrounded)
+            {
+                wasGrounded = true;
+                landTimer = 0.08f;
+            }
+            if (landTimer > 0f)
+            {
+                landTimer -= Time.deltaTime;
+                sr.sprite = jumpFrames[4];
+                return true;
+            }
+            return false;
         }
     }
 }

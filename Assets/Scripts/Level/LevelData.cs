@@ -105,13 +105,17 @@ namespace EcoDoTempo
                         "Diário do avô: \"Plantei aqui uma semente de carvalho. Lia, um dia ela será mais alta que nós dois.\"",
                         "Uma placa coberta de musgo: \"Jardim do Relojoeiro. Fechado desde a queda da torre.\""),
                 },
-                // Sem teto nem muro. O tronco (depois de plantar) é o degrau até o terraço.
+                // Piso contínuo. O tronco, depois de plantar, é o degrau até o terraço.
                 Map = new[]
                 {
-                    "......................2..*..D.",
+                    "..............................",
+                    "..............................",
+                    "..............................",
+                    "...................2..*...D...",
                     "...................###########",
-                    ".1.........@....i.............",
-                    "##################S...........",
+                    "..............................",
+                    ".1......@....i................",
+                    "##################S###########",
                 },
             },
             new LevelDefinition

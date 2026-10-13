@@ -88,9 +88,27 @@ namespace EcoDoTempo
             }
 
             PlaceBridgeSpans(spans, root, height);
+            PlaceLevelBounds(root, width, height);
             // Top of the solid under Lia — not the open tops of the side walls.
             result.FloorTopY = result.Spawn.y - 0.5f;
             return result;
+        }
+
+        // Invisible walls so Lia cannot leave the left or right edge of the map.
+        static void PlaceLevelBounds(Transform root, int width, int height)
+        {
+            float midY = (height - 1) * 0.5f + SceneYAlign;
+            float tall = height + 12f;
+            AddBound(root, new Vector2(-1f, midY), new Vector2(1f, tall));
+            AddBound(root, new Vector2(width, midY), new Vector2(1f, tall));
+        }
+
+        static void AddBound(Transform root, Vector2 pos, Vector2 size)
+        {
+            var go = new GameObject("LevelBound");
+            go.transform.SetParent(root, false);
+            go.transform.position = new Vector3(pos.x, pos.y, 0f);
+            go.AddComponent<BoxCollider2D>().size = size;
         }
 
         static List<BridgeSpan> FindBridgeSpans(string[] map, int height, HashSet<Vector2Int> claimed)

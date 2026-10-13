@@ -129,7 +129,7 @@ namespace EcoDoTempo
 
             if (scarf != null && input != 0f)
                 scarf.localPosition = new Vector3(-0.1f * Mathf.Sign(input), 0.1f, 0f);
-            if (spriteAnim != null) spriteAnim.Tick(input, grounded);
+            if (spriteAnim != null) spriteAnim.Tick(input, grounded, Velocity.y);
 
             Nearby = FindInteractable(gm.CurrentEra);
             if (Nearby != null && GameInput.InteractPressed) Nearby.Interact(gm.CurrentEra);

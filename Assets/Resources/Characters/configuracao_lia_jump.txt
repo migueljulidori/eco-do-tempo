@@ -1,0 +1,8 @@
+lia_jump.png — 160×32 PNG transparente, cinco quadros horizontais 32×32, padding 0.
+Ordem: preparação, subida, ápice, queda, aterrissagem.
+Criado com referência lia_walk(2).png; aparência aproximada preservando cabelo castanho, lenço vermelho e roupa de aprendiz. O resultado gerado pode variar em detalhes em relação ao sprite original.
+Exportado com escala uniforme nearest-neighbor, células centralizadas e pés alinhados à linha y30.
+Unity: Sprite (2D and UI), Multiple, PPU32, Point, Compression None, mipmaps off. Sprite Editor: Grid By Cell Size 32×32, offset0 padding0. Mesmo pivot do lia_walk; se usar Bottom Center, configure nos dois sheets para evitar deslocamento.
+Use cada pose em estado separado, Loop Time off. Preparação e aterrissagem: cerca de0,06–0,10s. Subida enquanto velocidade vertical>0, ápice próximo de0, queda enquanto<0 e fora do chão. Aterrissagem ao voltar ao chão; depois voltar ao idle/walk. Não repetir a sequência inteira em loop.
+Animator parâmetros sugeridos: Grounded(bool), VelocityY(float), Speed(float). O script existente deve atualizar esses parâmetros. Caso o jogo já troque sprites diretamente por código, integrar as poses nessa lógica sem deixar Animator e script disputarem o SpriteRenderer.
+Manter collider e Rigidbody2D existentes; o sprite não adiciona física nem modifica altura de salto. Animação não instalada no projeto nesta entrega e não testada no Unity.
