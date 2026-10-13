@@ -24,6 +24,8 @@ namespace EcoDoTempo
         }
 
         static string tileset;
+        static int plantOrdinal;
+        static readonly System.Collections.Generic.HashSet<int> plantColumns = new System.Collections.Generic.HashSet<int>();
 
         static Vector2 Cell(int col, int row, int height) =>
             new Vector2(col, height - 1 - row + SceneYAlign);
@@ -31,6 +33,11 @@ namespace EcoDoTempo
         public static BuildResult Build(LevelDefinition level, Transform root)
         {
             tileset = level.Tileset;
+            plantOrdinal = 0;
+            plantColumns.Clear();
+            foreach (var line in level.Map)
+                for (int c = 0; c < line.Length; c++)
+                    if (line[c] == 'S') plantColumns.Add(c);
             var result = new BuildResult();
             int height = level.Map.Length;
             int width = 0;
@@ -75,7 +82,10 @@ namespace EcoDoTempo
                         case 'D': ExitDoor.Create(root, pos); break;
                         case 'L': Lever.Create(root, pos); break;
                         case 'G': Gate.Create(root, pos); break;
-                        case 'S': SeedSpot.Create(root, pos); break;
+                        case 'S':
+                            SeedSpot.Create(root, pos, 2 + plantOrdinal);
+                            plantOrdinal++;
+                            break;
                         case 'i':
                             var note = noteIndex < level.Notes.Length
                                 ? level.Notes[noteIndex]
@@ -182,6 +192,7 @@ namespace EcoDoTempo
             {
                 bool floating = airAbove && row + 1 < height && !IsSolidChar(CharAt(map, row + 1, col, height));
                 if (floating) ArtCatalog.PickGardenLedge(out past, out future);
+                else if (airAbove && IsPlantBed(col)) ArtCatalog.PickGardenSoil(out past, out future);
                 else if (airAbove) ArtCatalog.PickGardenFloor(pos, out past, out future);
                 else ArtCatalog.PickGardenWall(out past, out future);
             }
@@ -289,6 +300,9 @@ namespace EcoDoTempo
             if (col >= line.Length) return '.';
             return line[col];
         }
+
+        static bool IsPlantBed(int col) =>
+            plantColumns.Contains(col) || plantColumns.Contains(col - 1) || plantColumns.Contains(col + 1);
 
         static bool IsSolidChar(char c) =>
             c == '#' || c == 'p' || c == 'f' || c == 'G' || c == 'S';

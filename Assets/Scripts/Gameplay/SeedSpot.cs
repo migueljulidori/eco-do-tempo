@@ -5,15 +5,13 @@ namespace EcoDoTempo
     // A seed planted in the past becomes a tree (platform) in the future.
     public class SeedSpot : MonoBehaviour, IInteractable
     {
-        const int TreeHeight = 2;
-
         bool planted;
         TimeObject sapling;
-        TimeObject step;
-        readonly TimeObject[] trunk = new TimeObject[TreeHeight];
+        TimeObject[] trunk = System.Array.Empty<TimeObject>();
 
-        public static void Create(Transform root, Vector2 pos)
+        public static void Create(Transform root, Vector2 pos, int height)
         {
+            height = Mathf.Max(1, height);
             string soilPast = ArtCatalog.FirstExisting("Tiles/floor_soil_past", "Tiles/soil", "Tiles/floor_grass_past");
             string soilFuture = ArtCatalog.FirstExisting("Tiles/floor_soil_future", "Tiles/soil_future", "Tiles/floor_soil_past");
             var soil = LevelBuilder.Block(root, pos, EraPresence.Both, Palette.PastSoil, Palette.FutureSoil, soilPast);
@@ -28,11 +26,8 @@ namespace EcoDoTempo
             spot.sapling.ForceHidden = true;
 
             string trunkArt = ArtCatalog.FirstExisting("Tiles/tree_trunk_future", "Tiles/tree_trunk", "Tiles/block_future");
-            // One-block step to the left, then the trunk whose top is level with the ledge.
-            spot.step = LevelBuilder.Block(root, pos + new Vector2(-1f, 1f), EraPresence.FutureOnly,
-                Palette.Tree, Palette.Tree, trunkArt);
-            spot.step.ForceHidden = true;
-            for (int i = 0; i < TreeHeight; i++)
+            spot.trunk = new TimeObject[height];
+            for (int i = 0; i < height; i++)
             {
                 spot.trunk[i] = LevelBuilder.Block(root, pos + Vector2.up * (i + 1), EraPresence.FutureOnly,
                     Palette.Tree, Palette.Tree, trunkArt);
@@ -54,7 +49,6 @@ namespace EcoDoTempo
             }
             planted = true;
             sapling.ForceHidden = false;
-            if (step != null) step.ForceHidden = false;
             foreach (var block in trunk) block.ForceHidden = false;
             gm.ApplyEra();
             gm.Synth.PlayNote(330f, 0.5f);

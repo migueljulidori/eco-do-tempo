@@ -77,13 +77,15 @@ namespace EcoDoTempo
         public static void PickGardenFloor(Vector2 pos, out string past, out string future)
         {
             int x = Mathf.RoundToInt(pos.x);
-            // Planting bed, cobble path, then grass with a few pebble breaks.
-            string kind = (x >= 20 && x <= 23) ? "soil"
-                : (x >= 5 && x <= 16) ? "cobble"
-                : (x % 6 == 0) ? "pebbles"
-                : "grass";
+            string kind = (x % 5 == 0) ? "pebbles" : (x % 2 == 0) ? "grass" : "cobble";
             past = FirstExisting("Tiles/floor_" + kind + "_past", "Tiles/floor_grass_past", "Tiles/floor_garden_past");
             future = FirstExisting("Tiles/floor_" + kind + "_future", "Tiles/floor_grass_future", "Tiles/floor_garden_future");
+        }
+
+        public static void PickGardenSoil(out string past, out string future)
+        {
+            past = FirstExisting("Tiles/floor_soil_past", "Tiles/soil", "Tiles/floor_grass_past");
+            future = FirstExisting("Tiles/floor_soil_future", "Tiles/soil_future", "Tiles/floor_soil_past");
         }
 
         public static void PickGardenLedge(out string past, out string future)

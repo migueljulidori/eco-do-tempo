@@ -96,8 +96,8 @@ namespace EcoDoTempo
                 Tileset = "garden",
                 Intro = new[]
                 {
-                    "O jardim onde o avô passava as tardes. A mureta da direita guarda a saída.",
-                    "Plante a semente no passado. No futuro, o carvalho alcança a mureta.",
+                    "Três canteiros marcados na terra. Plante cada um no passado.",
+                    "No futuro as árvores sobem em degraus até a plataforma no centro.",
                 },
                 Notes = new[]
                 {
@@ -105,16 +105,19 @@ namespace EcoDoTempo
                         "Diário do avô: \"Plantei aqui uma semente de carvalho. Lia, um dia ela será mais alta que nós dois.\"",
                         "Uma placa coberta de musgo: \"Jardim do Relojoeiro. Fechado desde a queda da torre.\""),
                 },
-                // Mureta na altura do topo do carvalho (2 blocos). Dá para subir nele e andar até a porta.
+                // Plataforma no centro, 5 blocos acima do chão.
+                // Canteiros S da esquerda para a direita: árvores de 2, 3 e 4 blocos.
                 Map = new[]
                 {
                     "..............................",
                     "..............................",
+                    ".............2.D..............",
+                    "...........#########..........",
                     "..............................",
-                    ".........................2.D..",
-                    "........................######",
-                    ".1....@.........*....i........",
-                    "#######################S######",
+                    "..............................",
+                    "..............................",
+                    "@1.i..*......................",
+                    "##S##S##S#####################",
                 },
             },
             new LevelDefinition
