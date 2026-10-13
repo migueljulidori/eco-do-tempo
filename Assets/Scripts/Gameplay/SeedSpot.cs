@@ -9,6 +9,7 @@ namespace EcoDoTempo
 
         bool planted;
         TimeObject sapling;
+        TimeObject step;
         readonly TimeObject[] trunk = new TimeObject[TreeHeight];
 
         public static void Create(Transform root, Vector2 pos)
