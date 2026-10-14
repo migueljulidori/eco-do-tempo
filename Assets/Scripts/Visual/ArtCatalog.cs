@@ -156,8 +156,9 @@ namespace EcoDoTempo
             return marker;
         }
 
-        public const float FloorClearance = 0.12f; // props / pickups
-        public const float PlayerFootClearance = 0.05f;
+        public const float FloorClearance = 0f;
+        // Idle and jump sheets are full-rect 32px with 2px empty under the feet.
+        public const float PlayerFootClearance = -2f / 32f;
 
         // Prefer pre-cropped bridge_deck (no transparent pad). Fallback crops bridge_past at runtime.
         static Sprite bridgeSprite;
