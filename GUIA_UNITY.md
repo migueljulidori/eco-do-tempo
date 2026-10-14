@@ -144,7 +144,7 @@ Para ver o mapa desenhado por cima do fundo, nas duas eras (também sem a Unity)
 python3 tools/render-levels.py
 ```
 
-As imagens vão para a pasta `Previas/`. Blocos cheios existem na era da imagem; tracejados, só na outra. A linha vermelha é o chão em que o fundo foi alinhado.
+As imagens vão para a pasta `Previas/`, desenhadas com a arte do jogo (o que só existe na outra era aparece translúcido). Com `--esquema`, o mapa aparece em caixas coloridas com rótulos, e a linha vermelha mostra o chão em que o fundo foi alinhado.
 
 ### Alinhamento com os fundos pintados
 

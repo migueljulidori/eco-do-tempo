@@ -32,7 +32,8 @@ namespace EcoDoTempo
         public ClockPuzzle[] Clocks = new ClockPuzzle[0];
         // Resource key under Resources/Backgrounds/{key}_past and {key}_future.
         public string Background;
-        // "garden" uses the garden floor, wall and soil tiles. Empty keeps the hall set.
+        // "garden" uses the garden floor, wall and soil tiles; "cloister" mossy slabs and dressed
+        // stone; "machine" riveted iron walls. Empty keeps the hall set.
         public string Tileset;
         // Map legend (top row first, one character = one 1×1 cell):
         //  #  wall in both eras          p  block only in the past     f  block only in the future
@@ -206,6 +207,7 @@ namespace EcoDoTempo
             {
                 Name = "O Claustro dos Ecos",
                 Background = "claustro",
+                Tileset = "cloister",
                 Powers = Power.Era | Power.Echo,
                 Intro = new[]
                 {
@@ -274,6 +276,7 @@ namespace EcoDoTempo
             {
                 Name = "O Coração do Relógio",
                 Background = "coracao",
+                Tileset = "machine",
                 Powers = Power.All,
                 Intro = new[]
                 {

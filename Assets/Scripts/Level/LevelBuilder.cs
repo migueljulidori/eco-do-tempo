@@ -71,7 +71,7 @@ namespace EcoDoTempo
                             break;
                         case 'f':
                             Block(root, pos, EraPresence.FutureOnly, Palette.FutureBlock, Palette.FutureBlock,
-                                tileset == "garden"
+                                tileset == "garden" || tileset == "cloister"
                                     ? ArtCatalog.FirstExisting("Tiles/wall_garden_future", "Tiles/floor_garden_future", "Tiles/block_stone_future")
                                     : ArtCatalog.PickFutureBlock(pos));
                             break;
@@ -265,7 +265,9 @@ namespace EcoDoTempo
 
         static void PlaceSolid(Transform root, Vector2 pos, string[] map, int row, int col, int height)
         {
-            bool airAbove = !IsSolidChar(CharAt(map, row - 1, col, height));
+            // A gate stands on the floor; the cell under it is still walkable floor.
+            char above = CharAt(map, row - 1, col, height);
+            bool airAbove = !IsSolidChar(above) || above == 'G' || above == 'a' || above == 'b';
             string past;
             string future;
             if (tileset == "garden")
@@ -276,7 +278,19 @@ namespace EcoDoTempo
                 else if (airAbove) ArtCatalog.PickGardenFloor(pos, out past, out future);
                 else ArtCatalog.PickGardenWall(out past, out future);
             }
+            else if (tileset == "cloister")
+            {
+                // Stone cloister: mossy slabs to walk on, dressed stone below and in walls.
+                if (airAbove) ArtCatalog.PickGardenLedge(out past, out future);
+                else ArtCatalog.PickGardenWall(out past, out future);
+            }
             else if (airAbove) ArtCatalog.PickFloorPair(pos, out past, out future);
+            else if (tileset == "machine")
+            {
+                // Clock heart: riveted iron instead of brick for walls and pillars.
+                past = ArtCatalog.FirstExisting("Tiles/block_metal_past", "Tiles/wall");
+                future = ArtCatalog.FirstExisting("Tiles/block_metal_future", "Tiles/block_stone_future");
+            }
             else ArtCatalog.PickWallPair(pos, out past, out future);
 
             var block = Block(root, pos, EraPresence.Both, Palette.PastWall, Palette.FutureWall, past);
