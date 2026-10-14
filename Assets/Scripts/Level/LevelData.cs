@@ -133,7 +133,7 @@ namespace EcoDoTempo
                 {
                     new InspectNote(
                         "Bilhete na tábua: \"Troque de era aqui e caia no poço. A alavanca lá embaixo abre a forja, mas só gira no passado.\"",
-                        "A tábua sumiu. A escada de metal sobe do poço. A forja, à direita, é uma ponte deste tempo."),
+                        "A tábua sumiu. No poço, um degrau em cada parede: segure o pulo para chegar ao seguinte. A forja, à direita, é uma ponte deste tempo."),
                     new InspectNote(
                         "Na parede: \"A porta de madeira ainda fecha o corredor. Atrás dela, a segunda alavanca abre o vão da saída.\"",
                         "A porta apodreceu. O vão da saída só tem chão de metal agora. Quem pisa no vazio cai nos espinhos."),
@@ -149,11 +149,11 @@ namespace EcoDoTempo
                     "..@.i.................i..............G.......pp..1A..a.*.D",
                     "##############pppp####################ffffff##########ff##",
                     ".............#...f#.......................................",
-                    ".............#..f.#...................^^^^^^..........^^..",
-                    ".............#...f#...................######..........##..",
-                    ".............#..f.#.......................................",
+                    ".............#....#...................^^^^^^..........^^..",
+                    ".............#f...#...................######..........##..",
+                    ".............#....#.......................................",
                     ".............#...f#.......................................",
-                    ".............#2Lf.#.......................................",
+                    ".............#2L..#.......................................",
                     ".............######.......................................",
                     "..........................................................",
                 },
