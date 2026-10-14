@@ -1,0 +1,16 @@
+CORREÇÃO — VISUALIZAÇÃO NA SCENE E HIERARCHY
+
+Causa confirmada: GameManager.Awake começa no estado Title. A fase só é criada em LoadLevel, depois da confirmação e da introdução. LevelBuilder já cria GameObjects reais; não é desenho direto sem objetos.
+
+INSTALAÇÃO
+1. Pare o Play.
+2. Espere o Unity recompilar.
+3. Menu superior: Eco do Tempo > Visualizar fase na Scene.
+4. Escolha fase, era e se deseja ver as árvores após plantio. Clique Gerar / atualizar prévia.
+5. Expanda PRÉVIA na Hierarchy. A Scene será enquadrada em 2D; selecione Lia ou um bloco e pressione F para aproximar.
+
+A prévia é temporária: não é salva na cena, desaparece antes do Play e ao recompilar. Para alterar o mapa de verdade, edite LevelData.cs e gere novamente. Nesta versão, gerar a prévia depois de importar nova arte usa os caches já existentes do projeto; se uma alteração não aparecer, recompile ou reinicie o editor.
+
+DURANTE O PLAY
+O jogo inicia no título. Na aba Game, pressione a tecla de confirmar indicada pelo jogo e avance a introdução: Level 1 aparecerá na Hierarchy.
+Para pular a introdução, selecione EcoDoTempo e abra o menu de três pontos do componente GameManager (ou botão direito no cabeçalho). Debug > Abrir fase 1/2/3 sem introdução. A fase real será criada e ficará visível na Hierarchy. Os atalhos reiniciam a fase selecionada e limpam as notas coletadas.

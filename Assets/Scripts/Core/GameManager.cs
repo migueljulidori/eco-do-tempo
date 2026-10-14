@@ -80,6 +80,21 @@ namespace EcoDoTempo
 
         bool InputReady => Time.frameCount > stateChangedFrame;
 
+        [ContextMenu("Debug/Abrir fase 1 sem introdução")]
+        void DebugLevelOne() => DebugLoadLevel(0);
+        [ContextMenu("Debug/Abrir fase 2 sem introdução")]
+        void DebugLevelTwo() => DebugLoadLevel(1);
+        [ContextMenu("Debug/Abrir fase 3 sem introdução")]
+        void DebugLevelThree() => DebugLoadLevel(2);
+
+        void DebugLoadLevel(int index)
+        {
+            if (!Application.isPlaying || index >= LevelData.Levels.Length) return;
+            CollectedNotes.Clear();
+            notesAtLevelStart.Clear();
+            LoadLevel(index, showIntro: false);
+        }
+
         void Update()
         {
             if (!InputReady) return;

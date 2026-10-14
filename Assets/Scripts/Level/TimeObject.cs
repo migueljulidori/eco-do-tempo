@@ -29,7 +29,7 @@ namespace EcoDoTempo
             obj.PastColor = past;
             obj.FutureColor = future;
             obj.IsSolid = solid;
-            GameManager.Instance.Register(obj);
+            if (GameManager.Instance != null) GameManager.Instance.Register(obj);
             return obj;
         }
 

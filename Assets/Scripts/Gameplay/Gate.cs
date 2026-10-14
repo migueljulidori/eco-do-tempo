@@ -35,7 +35,7 @@ namespace EcoDoTempo
             var gate = block.gameObject.AddComponent<Gate>();
             gate.timeObject = block;
             gate.channel = channel;
-            GameManager.Instance.RegisterGate(gate);
+            if (GameManager.Instance != null) GameManager.Instance.RegisterGate(gate);
         }
 
         public void Open() => timeObject.ForceIntangible = true;
