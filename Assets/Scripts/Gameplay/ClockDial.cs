@@ -85,6 +85,12 @@ namespace EcoDoTempo
                 return;
             }
 
+            if (solved)
+            {
+                gm.ShowMessage($"Os ponteiros já marcam {hour}h. O portão está aberto.");
+                return;
+            }
+
             hour = hour % 12 + 1;
             UpdateHand();
             gm.Synth.PlayNote(880f, 0.08f, 0.35f);

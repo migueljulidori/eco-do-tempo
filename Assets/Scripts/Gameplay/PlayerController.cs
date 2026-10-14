@@ -24,6 +24,13 @@ namespace EcoDoTempo
         float coyoteTimer;
         float jumpBufferTimer;
         Mover groundMover;
+        bool groundIsSafe;
+        // Last safe spot: solid in every era, not moving, away from hazards. Deaths respawn here.
+        Vector2 checkpoint;
+        Era checkpointEra;
+        float safeTime;
+        const float CheckpointDelay = 0.3f;
+        const float HazardClearance = 2f;
         readonly List<Collider2D> hits = new List<Collider2D>();
         static readonly ContactFilter2D AnyCollider = new ContactFilter2D().NoFilter();
         SpriteRenderer visualRenderer;
@@ -91,6 +98,8 @@ namespace EcoDoTempo
             player.scarf = scarfGo != null ? scarfGo.transform : null;
             player.spriteAnim = anim;
             player.spawn = spawn + Vector2.up * 0.2f;
+            player.checkpoint = player.spawn;
+            player.checkpointEra = GameManager.Instance != null ? GameManager.Instance.Level.StartEra : Era.Past;
             return player;
         }
 
@@ -104,6 +113,11 @@ namespace EcoDoTempo
             if (visual == null && transform.childCount > 0) visual = transform.GetChild(0);
             if (spriteAnim == null && visual != null) spriteAnim = visual.GetComponent<PlayerSpriteAnimator>();
             if (spawn == Vector2.zero) spawn = transform.position;
+            if (checkpoint == Vector2.zero)
+            {
+                checkpoint = spawn;
+                checkpointEra = GameManager.Instance != null ? GameManager.Instance.Level.StartEra : Era.Past;
+            }
         }
 
         void LateUpdate()
@@ -117,7 +131,7 @@ namespace EcoDoTempo
         void Update()
         {
             var gm = GameManager.Instance;
-            if (gm.State != GameState.Playing)
+            if (gm.State != GameState.Playing || !gm.InputReady)
             {
                 Velocity = new Vector2(0f, Velocity.y);
                 Nearby = null;
@@ -129,6 +143,7 @@ namespace EcoDoTempo
             bool grounded = IsGrounded();
 
             coyoteTimer = grounded ? CoyoteTime : coyoteTimer - dt;
+            UpdateCheckpoint(grounded, gm.CurrentEra, dt);
             jumpBufferTimer = GameInput.JumpPressed ? JumpBufferTime : jumpBufferTimer - dt;
 
             float speed = Speed;
@@ -173,9 +188,41 @@ namespace EcoDoTempo
             if (transform.position.y < FallLimit) Die();
         }
 
+        void UpdateCheckpoint(bool grounded, Era era, float dt)
+        {
+            if (!grounded || !groundIsSafe || Mathf.Abs(Velocity.y) > 0.1f || HazardNearby())
+            {
+                safeTime = 0f;
+                return;
+            }
+            safeTime += dt;
+            if (safeTime < CheckpointDelay) return;
+            checkpoint = rb.position;
+            checkpointEra = era;
+        }
+
+        bool HazardNearby()
+        {
+            int count = Physics2D.OverlapCircle(rb.position, HazardClearance, AnyCollider, hits);
+            for (int i = 0; i < count; i++)
+                if (hits[i].enabled && hits[i].GetComponentInParent<Hazard>() != null) return true;
+            return false;
+        }
+
+        // Ground that is there in every era and never moves on its own.
+        static bool IsSafeGround(Collider2D col)
+        {
+            if (col.GetComponentInParent<Mover>() != null || col.GetComponentInParent<TimeCrate>() != null
+                || col.GetComponentInParent<EchoGhost>() != null || col.GetComponent<Gate>() != null)
+                return false;
+            var timed = col.GetComponent<TimeObject>();
+            return timed == null || (timed.Presence == EraPresence.Both && !timed.ForceHidden);
+        }
+
         bool IsGrounded()
         {
             groundMover = null;
+            groundIsSafe = true;
             bool grounded = false;
             var feet = (Vector2)transform.position + Vector2.down * (BodySize.y * 0.5f + 0.05f);
             int count = Physics2D.OverlapBox(feet, new Vector2(BodySize.x * 0.85f, 0.1f), 0f, AnyCollider, hits);
@@ -183,6 +230,7 @@ namespace EcoDoTempo
             {
                 if (hits[i] == body || hits[i].isTrigger) continue;
                 grounded = true;
+                if (!IsSafeGround(hits[i])) groundIsSafe = false;
                 var mover = hits[i].GetComponentInParent<Mover>();
                 if (mover != null) groundMover = mover;
             }
@@ -214,6 +262,7 @@ namespace EcoDoTempo
                 VisualOffset = visual != null ? (Vector2)visual.localPosition : Vector2.zero,
                 VisualScale = visual != null ? (Vector2)visual.localScale : Vector2.one,
                 Interact = interact,
+                Era = GameManager.Instance.CurrentEra,
             };
         }
 
@@ -241,8 +290,9 @@ namespace EcoDoTempo
 
         public void Die()
         {
-            TeleportTo(spawn);
-            GameManager.Instance.OnPlayerDied();
+            TeleportTo(checkpoint);
+            safeTime = 0f;
+            GameManager.Instance.OnPlayerDied(checkpointEra);
         }
     }
 }

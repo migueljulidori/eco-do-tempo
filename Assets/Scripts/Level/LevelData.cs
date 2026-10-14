@@ -37,7 +37,6 @@ namespace EcoDoTempo
         public string Tileset;
         // Map legend (top row first, one character = one 1×1 cell):
         //  #  wall in both eras          p  block only in the past     f  block only in the future
-        //  !  invisible wall (only where the painted background clearly shows a wall)
         //  ^  spikes (both eras)         ~  forge fire (past only)     @  player start   D  exit door
         //  *  melody fragment (both)     1  fragment only in the past  2  fragment only in the future
         //  S  soil: plant in the past, a tree grows in the future (heights 2, 3, 4... in reading order)
@@ -74,14 +73,14 @@ namespace EcoDoTempo
         {
             "Na vila de Ressonância, o Grande Relógio tocava a Canção do Eco a cada amanhecer. Diziam que era ela que mantinha o passado e o futuro em seus lugares.",
             "Na noite em que a torre ruiu, a melodia se partiu em dezoito fragmentos, espalhados entre as eras.",
-            "Você é Lia, aprendiz do velho relojoeiro. Com o diapasão que ele lhe deixou, você consegue ouvir o eco de outros tempos... e atravessá-los.",
+            "Você é Lia, neta e aprendiz do velho relojoeiro. Com o diapasão que ele lhe deixou, você consegue ouvir o eco de outros tempos... e atravessá-los.",
             "Quanto mais notas o diapasão ouvir, mais ele aprende. Reúna os fragmentos. Faça o relógio tocar outra vez.",
         };
 
         public static readonly string[] Ending =
         {
             "Os dezoito fragmentos se unem em suas mãos. O diapasão vibra, e a Canção do Eco ressoa pela torre.",
-            "No passado, o avô para o trabalho e sorri ao ouvir a melodia. No futuro, a torre se ergue outra vez.",
+            "No passado, o avô interrompe o trabalho e sorri ao ouvir a melodia. No futuro, a torre se ergue outra vez.",
             "Em algum lugar entre os dois, um eco seu acena e se desfaz.",
             "Passado e futuro, finalmente, em harmonia.\n\nFim... por enquanto.",
         };
@@ -94,8 +93,8 @@ namespace EcoDoTempo
                 Background = "salao",
                 Intro = new[]
                 {
-                    "As ruínas do salão principal. No passado, uma ponte de tábuas cruzava o fosso.",
-                    "Pressione Q para alternar entre PASSADO e FUTURO.\nO que só existe na outra era aparece como um eco translúcido.",
+                    "O salão principal do Grande Relógio. No passado, uma ponte de tábuas cruzava o fosso; no futuro, só restam ruínas.",
+                    "Pressione Q para alternar entre PASSADO e FUTURO.\nO que só existe na outra era aparece como uma silhueta translúcida.",
                     "O diapasão responde até no meio de um salto.",
                 },
                 Notes = new[]
@@ -127,7 +126,7 @@ namespace EcoDoTempo
                 {
                     "O jardim do avô. Três canteiros de terra esperam sementes, e o terraço da saída está trancado.",
                     "O que você faz no PASSADO permanece no FUTURO: uma semente vira árvore, uma caixa empurrada fica onde você a deixou.",
-                    "Caixas de ferro só deslizam no passado. No futuro, a ferrugem as prende ao chão.",
+                    "Caixas de ferro só deslizam no passado. No futuro, a ferrugem as prende ao chão. Um losango colorido liga cada mecanismo ao portão que ele abre.",
                 },
                 Notes = new[]
                 {
@@ -164,16 +163,16 @@ namespace EcoDoTempo
                 {
                     "A oficina sob a torre. No passado, as máquinas ainda giram.",
                     "Elevadores e engrenagens só se movem no PASSADO. No FUTURO a ferrugem os trava exatamente onde você os deixou.",
-                    "Alavancas só giram no passado, mas o que abrem continua aberto em todas as eras. A cor do losango mostra o que cada uma abre.",
+                    "Alavancas só se movem no passado, mas o que abrem continua aberto em todas as eras. A cor do losango mostra o que cada uma abre.",
                 },
                 Notes = new[]
                 {
                     new InspectNote(
-                        "Bilhete na tábua: \"Troque de era aqui e caia no poço. A alavanca lá embaixo abre a forja, mas só gira no passado.\"",
-                        "A tábua sumiu. No poço, um degrau em cada parede: segure o pulo para chegar ao seguinte. A forja, à direita, é uma ponte deste tempo."),
+                        "Bilhete preso à parede: \"Sobre a ponte, troque de era e caia no poço. A alavanca lá embaixo abre o caminho da forja, mas só gira no passado.\"",
+                        "O bilhete quase se apagou, e a ponte de tábuas sumiu. No poço, degraus deste tempo se alternam entre as paredes: segure o pulo para alcançar o seguinte. A forja, à direita, é uma ponte deste tempo."),
                     new InspectNote(
                         "Placa do elevador: \"Uma viga de madeira tranca o topo da torre. Ninguém passa para a alavanca de cima.\"",
-                        "A viga apodreceu faz tempo. Mas o elevador também parou... e só para onde alguém o deixou no passado."),
+                        "A viga apodreceu faz tempo. Mas o elevador também parou: continua exatamente onde alguém o deixou no passado."),
                 },
                 // Fundo 2900×1154, lábio no pixel 664. 50 px = 1 coluna.
                 // Poço 13–17, forja 38–43 (brasa no passado, metal no futuro), porta de madeira 47–48, saída 54–56.
@@ -212,8 +211,8 @@ namespace EcoDoTempo
                 Intro = new[]
                 {
                     "Um pátio de pedra atrás do jardim. Placas no chão seguram os portões abertos, mas só enquanto alguém pisa nelas.",
-                    "O diapasão aprendeu a ECOAR. Aperte F para gravar seus passos. Aperte F de novo: o tempo volta, você retorna ao ponto de partida... e um eco seu repete tudo o que você fez.",
-                    "O eco fica parado onde terminou. Ele segura placas, aperta o que você apertou e aguenta o seu peso.",
+                    "O diapasão aprendeu a ECOAR. Aperte F para gravar seus passos (até 8 segundos). Aperte F de novo: o tempo volta, você retorna ao ponto de partida... e um eco seu repete tudo o que você fez.",
+                    "O eco fica parado onde terminou: segura placas, aguenta o seu peso e puxa as alavancas que você puxou. Só cabe um eco por vez: gravar de novo apaga o anterior.",
                 },
                 Notes = new[]
                 {
@@ -224,7 +223,7 @@ namespace EcoDoTempo
                         "Duas placas e um portão. Uma caixa de ferro pesa tanto quanto uma pessoa.",
                         "As placas ainda funcionam. A ferrugem, não: no futuro nada se arrasta."),
                 },
-                // Fundo do claustro: chão contínuo; as paredes ficam sobre os pilares pintados das colunas 8 e 26.
+                // Fundo do claustro: chão contínuo; pilares pintados nas colunas 2, 8, 14, 20 e 26.
                 // x segura G. Os dois y seguram a: um para a caixa, outro para o eco.
                 Map = new[]
                 {
@@ -287,10 +286,10 @@ namespace EcoDoTempo
                 Notes = new[]
                 {
                     new InspectNote(
-                        "Esquema do avô: \"A placa do porão segura a comporta da forja. Algo pesado precisa ficar lá embaixo para sempre.\"",
+                        "Esquema do avô: \"A placa do porão segura o portão da forja. Algo pesado precisa ficar lá embaixo para sempre.\"",
                         "O esquema desbotou. As tábuas novas sobre o porão só existem neste tempo; os degraus lá dentro, só no passado."),
                     new InspectNote(
-                        "\"O elevador do coração nunca para. A lâmina do pêndulo guarda a alavanca do topo.\"",
+                        "Placa do elevador: \"O elevador do coração nunca para. A lâmina do pêndulo guarda a alavanca do topo.\"",
                         "Alguém riscou por cima, com a sua letra: \"Segure a nota. Depois, deixe alguém pisando por você.\""),
                 },
                 // Fundo 2900×1154, lábio no pixel 664, 50 px = 1 coluna. Vãos pintados: 16–20, 39–44, 53–54.

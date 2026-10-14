@@ -36,7 +36,7 @@ namespace EcoDoTempo
         }
 
         public string Prompt(Era era) =>
-            planted ? "Uma muda cresce aqui" : era == Era.Past ? "E: plantar semente" : "E: examinar a terra";
+            planted ? (era == Era.Past ? "Uma muda cresce aqui" : "Um carvalho cresceu aqui") : era == Era.Past ? "E: plantar semente" : "E: examinar a terra";
 
         public void Interact(Era era)
         {

@@ -111,6 +111,12 @@ namespace EcoDoTempo
             melody = StartCoroutine(PlaySequence(notes));
         }
 
+        public void StopMelody()
+        {
+            if (melody != null) StopCoroutine(melody);
+            melody = null;
+        }
+
         IEnumerator PlaySequence(List<int> notes)
         {
             yield return new WaitForSeconds(0.3f);

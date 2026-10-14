@@ -48,7 +48,7 @@ namespace EcoDoTempo
                 transform.rotation = Quaternion.Euler(0f, 0f, -30f);
             gm.LatchChannel(channel);
             gm.Synth.PlayNote(220f + channel * 40f, 0.4f);
-            gm.ShowMessage("Uma comporta da mesma cor se abriu... em todas as eras.");
+            gm.ShowMessage("Um portão da mesma cor se abriu... em todas as eras.");
         }
     }
 }

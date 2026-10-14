@@ -120,7 +120,8 @@ namespace EcoDoTempo
             stateChangedFrame = Time.frameCount;
         }
 
-        bool InputReady => Time.frameCount > stateChangedFrame;
+        // False on the frame the state changed, so one key press is never handled twice.
+        public bool InputReady => Time.frameCount > stateChangedFrame;
 
         // Testing shortcuts: in the Inspector, ⋮ on GameManager, or keys 1–6 on the title screen.
         [ContextMenu("Debug/Abrir fase 1 sem introdução")] void DebugLevel1() => DebugLoadLevel(0);
@@ -164,7 +165,13 @@ namespace EcoDoTempo
                     break;
 
                 case GameState.Story:
-                    if (GameInput.ConfirmPressed)
+                    if (GameInput.PausePressed && StoryPage < StoryPages.Length - 1)
+                    {
+                        // Esc skips to the last page; Enter then starts as usual.
+                        StoryPage = StoryPages.Length - 1;
+                        stateChangedFrame = Time.frameCount;
+                    }
+                    else if (GameInput.ConfirmPressed)
                     {
                         StoryPage++;
                         stateChangedFrame = Time.frameCount;
@@ -177,7 +184,8 @@ namespace EcoDoTempo
                     break;
 
                 case GameState.Inspecting:
-                    if (GameInput.ConfirmPressed || GameInput.InteractPressed) SetState(GameState.Playing);
+                    if (GameInput.ConfirmPressed || GameInput.InteractPressed || GameInput.PausePressed)
+                        SetState(GameState.Playing);
                     break;
 
                 case GameState.Paused:
@@ -232,7 +240,9 @@ namespace EcoDoTempo
             if (GameInput.EchoPressed)
             {
                 if (HasPower(Power.Echo)) Echo.Toggle();
-                else ShowMessage("O diapasão ainda não sabe ecoar.", 2f);
+                else ShowMessage(PowerLearnedBefore(Power.Echo)
+                    ? "O eco não responde aqui: o tempo está instável demais."
+                    : "O diapasão ainda não sabe ecoar.", 2f);
             }
 
             if (Level.AutoSwitchInterval > 0f)
@@ -267,7 +277,9 @@ namespace EcoDoTempo
             if (!GameInput.FermataPressed) return;
             if (!HasPower(Power.Fermata))
             {
-                ShowMessage("O diapasão ainda não sabe segurar uma nota.", 2f);
+                ShowMessage(PowerLearnedBefore(Power.Fermata)
+                    ? "A fermata não responde aqui."
+                    : "O diapasão ainda não sabe segurar uma nota.", 2f);
                 return;
             }
             if (fermataCooldown > 0f) return;
@@ -282,6 +294,13 @@ namespace EcoDoTempo
             fermataTimer = 0f;
             fermataCooldown = FermataCooldown;
             Synth.PlayNote(392f, 0.25f, 0.3f);
+        }
+
+        bool PowerLearnedBefore(Power power)
+        {
+            for (int i = 0; i < LevelIndex; i++)
+                if ((LevelData.Levels[i].Powers & power) != 0) return true;
+            return false;
         }
 
         void Resume()
@@ -351,6 +370,7 @@ namespace EcoDoTempo
             }
 
             FragmentsCollected = 0;
+            Synth.StopMelody();
             levelRoot = new GameObject("Level " + (index + 1));
             var result = LevelBuilder.Build(Level, levelRoot.transform);
             levelSize = result.Size;
@@ -388,6 +408,7 @@ namespace EcoDoTempo
             autoSwitchTimer = 0f;
             fermataTimer = 0f;
             fermataCooldown = 0f;
+            messageUntil = 0f;
             Player = null;
             levelBackground = null;
             if (levelRoot != null) Destroy(levelRoot);
@@ -428,7 +449,7 @@ namespace EcoDoTempo
             {
                 if (!silentWhenBlocked)
                 {
-                    ShowMessage($"O eco está bloqueado: algo ocupa este espaço no {target.DisplayName().ToLower()}.");
+                    ShowMessage($"Não dá para mudar de era aqui: algo ocupa este lugar no {target.DisplayName().ToLower()}.");
                     Synth.PlayBlocked();
                 }
                 return false;
@@ -504,19 +525,26 @@ namespace EcoDoTempo
         {
             if (State != GameState.Playing) return;
             if (AllFragmentsCollected) CompleteLevel();
-            else ShowMessage($"A porta está selada. Faltam {FragmentsTotal - FragmentsCollected} fragmento(s).", 1.5f);
+            else
+            {
+                int left = FragmentsTotal - FragmentsCollected;
+                ShowMessage(left == 1 ? "A porta está selada. Falta 1 fragmento."
+                    : $"A porta está selada. Faltam {left} fragmentos.", 1.5f);
+            }
         }
 
-        public void OnPlayerDied()
+        public void OnPlayerDied(Era respawnEra)
         {
             Synth.PlayBlocked();
             Flash(new Color(0.8f, 0.1f, 0.1f, 0.45f));
             Echo.Cancel();
             if (fermataTimer > 0f) EndFermata();
-            CurrentEra = Level.StartEra;
+            // Back to the last safe spot, in the era Lia stood there (it is free in that era).
+            CurrentEra = respawnEra;
             autoSwitchTimer = 0f;
             ApplyEra();
-            ShowMessage("O eco te trouxe de volta ao início. (R reinicia a fase inteira.)");
+            camFollow.Snap();
+            ShowMessage("O diapasão trouxe você de volta. (R reinicia a fase inteira.)");
         }
 
         public void Inspect(string text)

@@ -11,6 +11,7 @@ namespace EcoDoTempo
         public Vector2 VisualOffset;
         public Vector2 VisualScale;
         public bool Interact;
+        public Era Era;
     }
 
     // Lia's echo: replays a recording frame by frame, then stays where it ended.
@@ -79,7 +80,7 @@ namespace EcoDoTempo
                 var frame = frames[index++];
                 rb.MovePosition(frame.Position);
                 ShowFrame(frame);
-                if (frame.Interact) TryInteract(gm, frame.Position);
+                if (frame.Interact) TryInteract(frame.Era, frame.Position);
                 return;
             }
 
@@ -138,7 +139,7 @@ namespace EcoDoTempo
             return false;
         }
 
-        void TryInteract(GameManager gm, Vector2 at)
+        void TryInteract(Era era, Vector2 at)
         {
             int count = Physics2D.OverlapCircle(at, InteractRadius, TimeBodies.AllContacts, hits);
             IInteractable best = null;
@@ -151,7 +152,7 @@ namespace EcoDoTempo
                 float d = Vector2.Distance(at, hits[i].transform.position);
                 if (d < bestDistance) { best = interactable; bestDistance = d; }
             }
-            best?.Interact(gm.CurrentEra);
+            best?.Interact(era);
         }
     }
 }

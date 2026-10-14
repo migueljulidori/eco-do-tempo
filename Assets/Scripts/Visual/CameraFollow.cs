@@ -24,6 +24,11 @@ namespace EcoDoTempo
             transform.position = Clamp(target.position);
         }
 
+        public void Snap()
+        {
+            if (target != null) transform.position = Clamp(target.position);
+        }
+
         // On very wide windows, zoom in just enough that nothing outside the level shows.
         public static void FitToLevel(Camera camera, int levelWidth)
         {

@@ -8,8 +8,12 @@ namespace EcoDoTempo
         const float VirtualHeight = 720f;
 
         GUIStyle title, subtitle, body, small, center, eraLabel, prompt, message, heading;
+        GUIStyle[] styles;
+        int[] baseFontSizes;
         Texture2D white;
         float width;
+        float uiScale = 1f;
+        float fontScale = -1f;
 
         void InitStyles()
         {
@@ -18,15 +22,32 @@ namespace EcoDoTempo
             title = new GUIStyle(GUI.skin.label) { fontSize = 72, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
             subtitle = new GUIStyle(title) { fontSize = 26, fontStyle = FontStyle.Italic };
             body = new GUIStyle(GUI.skin.label) { fontSize = 26, wordWrap = true, alignment = TextAnchor.MiddleCenter };
-            small = new GUIStyle(GUI.skin.label) { fontSize = 18 };
+            small = new GUIStyle(GUI.skin.label) { fontSize = 18, wordWrap = false };
             center = new GUIStyle(small) { alignment = TextAnchor.MiddleCenter };
             eraLabel = new GUIStyle(small) { fontSize = 26, fontStyle = FontStyle.Bold };
             prompt = new GUIStyle(center) { fontSize = 24 };
             message = new GUIStyle(body) { fontSize = 20 };
             heading = new GUIStyle(title) { fontSize = 42 };
-            foreach (var s in new[] { title, subtitle, body, small, center, eraLabel, prompt, message, heading })
-                s.normal.textColor = Color.white;
+            styles = new[] { title, subtitle, body, small, center, eraLabel, prompt, message, heading };
+            baseFontSizes = new int[styles.Length];
+            for (int i = 0; i < styles.Length; i++)
+            {
+                styles[i].normal.textColor = Color.white;
+                baseFontSizes[i] = styles[i].fontSize;
+            }
         }
+
+        // Text is rendered at the real screen size (sharp at 1080p and 4K), not stretched.
+        void ScaleFonts()
+        {
+            if (Mathf.Approximately(fontScale, uiScale)) return;
+            fontScale = uiScale;
+            for (int i = 0; i < styles.Length; i++)
+                styles[i].fontSize = Mathf.Max(1, Mathf.RoundToInt(baseFontSizes[i] * uiScale));
+        }
+
+        // Layout is written for a 1280×720 virtual screen; this maps it to real pixels.
+        Rect ToScreen(Rect r) => new Rect(r.x * uiScale, r.y * uiScale, r.width * uiScale, r.height * uiScale);
 
         void OnGUI()
         {
@@ -34,9 +55,10 @@ namespace EcoDoTempo
             if (gm == null) return;
             InitStyles();
 
-            float scale = Screen.height / VirtualHeight;
-            width = Screen.width / scale;
-            GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
+            uiScale = Mathf.Max(0.1f, Screen.height / VirtualHeight);
+            width = Screen.width / uiScale;
+            GUI.matrix = Matrix4x4.identity;
+            ScaleFonts();
 
             switch (gm.State)
             {
@@ -83,7 +105,7 @@ namespace EcoDoTempo
             Fill(new Rect(0, 0, width, VirtualHeight), new Color(0, 0, 0, 0.85f));
             int page = Mathf.Min(gm.StoryPage, gm.StoryPages.Length - 1);
             Label(new Rect(width * 0.15f, 160, width * 0.7f, 360), gm.StoryPages[page], body, Color.white);
-            Label(new Rect(0, 600, width, 30), $"{page + 1}/{gm.StoryPages.Length}     ENTER para continuar", center, new Color(1, 1, 1, 0.7f));
+            Label(new Rect(0, 600, width, 30), $"{page + 1}/{gm.StoryPages.Length}     ENTER para continuar     ESC pula", center, new Color(1, 1, 1, 0.7f));
         }
 
         void DrawHud(GameManager gm)
@@ -110,18 +132,19 @@ namespace EcoDoTempo
 
             if (gm.Echo.Recording)
             {
-                var bar = new Rect(width * 0.5f - 200, VirtualHeight - 190, 400, 12);
+                var bar = new Rect(width * 0.5f - 200, VirtualHeight - 230, 400, 12);
                 float blink = 0.6f + 0.4f * Mathf.Sin(Time.time * 8f);
                 Fill(bar, new Color(0, 0, 0, 0.55f));
                 Fill(new Rect(bar.x, bar.y, bar.width * gm.Echo.RecordProgress, bar.height), new Color(1f, 0.35f, 0.35f));
-                Label(new Rect(bar.x, bar.y - 28, bar.width, 24),
+                Label(new Rect(width * 0.5f - 340, bar.y - 28, 680, 24),
                     $"REC  GRAVANDO ECO  {gm.Echo.RecordedSeconds:0.0}s / {EchoSystem.MaxSeconds:0}s   —   F para voltar no tempo",
                     center, new Color(1f, 0.5f, 0.5f, blink));
             }
 
             if (gm.Level.AutoSwitchInterval > 0f)
             {
-                var bar = new Rect(width * 0.5f - 200, 20, 400, 14);
+                // Above the controls line, away from the melody panel at the top.
+                var bar = new Rect(width * 0.5f - 200, VirtualHeight - 72, 400, 14);
                 Fill(bar, new Color(0, 0, 0, 0.5f));
                 Fill(new Rect(bar.x, bar.y, bar.width * gm.AutoSwitchProgress, bar.height), eraColor);
                 Label(new Rect(bar.x, bar.yMax + 2, bar.width, 22), "ritmo do tempo", center, new Color(1, 1, 1, 0.6f));
@@ -166,7 +189,7 @@ namespace EcoDoTempo
         float PowerTag(GameManager gm, float x, float y, string text, bool available, bool ready, Color color)
         {
             if (!available) return x;
-            float w = small.CalcSize(new GUIContent(text)).x + 14f;
+            float w = small.CalcSize(new GUIContent(text)).x / uiScale + 14f;
             var c = color;
             c.a = ready ? 0.9f : 0.35f;
             Fill(new Rect(x, y + 2, w, 22), new Color(0, 0, 0, 0.35f));
@@ -194,7 +217,7 @@ namespace EcoDoTempo
             Label(new Rect(0, 230, width, 60), "PAUSADO", heading, Color.white);
             Label(new Rect(0, 320, width, 32), "ESC ou ENTER   continuar", body, Color.white);
             Label(new Rect(0, 362, width, 32), "R   reiniciar a fase", body, new Color(1, 1, 1, 0.85f));
-            Label(new Rect(0, 404, width, 32), "M   voltar ao título (o progresso fica salvo)", body, new Color(1, 1, 1, 0.85f));
+            Label(new Rect(0, 404, width, 32), "M   voltar ao título (o jogo salva no início de cada fase)", body, new Color(1, 1, 1, 0.85f));
         }
 
         void DrawInspect(GameManager gm)
@@ -227,15 +250,15 @@ namespace EcoDoTempo
         {
             var old = GUI.color;
             GUI.color = color;
-            GUI.DrawTexture(rect, white);
+            GUI.DrawTexture(ToScreen(rect), white);
             GUI.color = old;
         }
 
-        static void Label(Rect rect, string text, GUIStyle style, Color color)
+        void Label(Rect rect, string text, GUIStyle style, Color color)
         {
             var old = style.normal.textColor;
             style.normal.textColor = color;
-            GUI.Label(rect, text, style);
+            GUI.Label(ToScreen(rect), text, style);
             style.normal.textColor = old;
         }
     }

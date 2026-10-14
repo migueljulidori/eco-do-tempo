@@ -50,10 +50,12 @@ Aperte **Play** em qualquer cena. Na tela de título:
 | **F** | **Eco**: grava seus passos; F de novo volta no tempo e deixa um eco repetindo tudo |
 | **C** | **Fermata**: segura o tempo por 3 s (C de novo solta) |
 | R | reiniciar a fase |
-| Esc / P | pausar (R reinicia, M volta ao título) |
+| Esc / P | pausar (R reinicia, M volta ao título); nos textos, pula para a última página |
 | Enter | avançar textos |
 
 ## 4. As regras do tempo (o que o jogador aprende)
+
+Ao morrer, Lia volta ao último chão seguro em que pisou (longe de perigos), na era em que estava ali. R reinicia a fase inteira.
 
 | Regra | Onde aparece |
 | --- | --- |
