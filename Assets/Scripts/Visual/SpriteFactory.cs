@@ -9,7 +9,7 @@ namespace EcoDoTempo
         const int Size = 16;
 
         static Sprite square, triangle, circle, diamond, softCircle;
-        static Material material;
+        static Material runtimeDefault;
 
         public static Sprite Square => square != null ? square : square = Make((x, y) => true);
 
@@ -24,29 +24,30 @@ namespace EcoDoTempo
         // Soft radial disc for a light halo behind pickups.
         public static Sprite SoftCircle => softCircle != null ? softCircle : softCircle = MakeSoft();
 
-        // Unlit so sprites look the same in Built-in, URP and URP 2D projects.
-        static Material Material
-        {
-            get
-            {
-                if (material == null)
-                {
-                    var shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
-                    if (shader == null) shader = Shader.Find("Sprites/Default");
-                    material = new Material(shader);
-                }
-                return material;
-            }
-        }
-
         public static SpriteRenderer AddRenderer(GameObject go, Sprite sprite, Color color, int order = 0)
         {
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.color = color;
             sr.sortingOrder = order;
-            sr.sharedMaterial = Material;
+            // Do not assign `new Material(...)`. That copy is not an asset, so saving
+            // a prefab clears it and every tile disappears. AddComponent already uses
+            // the engine Sprites/Default material, which does survive the save.
             return sr;
+        }
+
+        // Play-mode heal for prefabs saved while the material reference was missing.
+        public static void UseDefaultSpriteMaterial(SpriteRenderer sr)
+        {
+            if (sr == null || sr.sharedMaterial != null) return;
+            if (runtimeDefault == null)
+            {
+                var shader = Shader.Find("Sprites/Default");
+                if (shader == null) shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
+                if (shader == null) return;
+                runtimeDefault = new Material(shader) { name = "Sprites-Default-Runtime" };
+            }
+            sr.sharedMaterial = runtimeDefault;
         }
 
         public static GameObject CreateObject(string name, Transform parent, Vector2 position, Vector2 scale,

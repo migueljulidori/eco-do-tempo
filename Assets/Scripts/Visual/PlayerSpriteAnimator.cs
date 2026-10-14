@@ -113,6 +113,7 @@ namespace EcoDoTempo
 
         static Sprite[] SliceHorizontal(Texture2D tex, int frame)
         {
+            if (!tex.isReadable) return Array.Empty<Sprite>();
             tex.filterMode = FilterMode.Point;
             tex.wrapMode = TextureWrapMode.Clamp;
             int count = Mathf.Max(1, tex.width / frame);
@@ -130,9 +131,38 @@ namespace EcoDoTempo
             return sprites.OrderBy(s => s.name, StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
+        void OnEnable() => EnsureFrames();
+
+        // Prefab save drops the sliced frames (they were created in memory).
+        void EnsureFrames()
+        {
+            if (sr == null) sr = GetComponent<SpriteRenderer>();
+            bool missing = (frames == null || frames.Length == 0)
+                && (idleFrames == null || idleFrames.Length == 0)
+                && (jumpFrames == null || jumpFrames.Length == 0);
+            if (!missing) return;
+
+            frames = LoadWalkSprites() ?? Array.Empty<Sprite>();
+            jumpFrames = LoadJumpFrames() ?? Array.Empty<Sprite>();
+            idleFrames = LoadIdleFrames() ?? Array.Empty<Sprite>();
+            if (sr == null || sr.sprite != null) return;
+
+            Sprite first = idleFrames.Length > 0 ? idleFrames[0]
+                : frames.Length > 0 ? frames[0]
+                : jumpFrames.Length > 0 ? jumpFrames[0]
+                : null;
+            if (first == null) return;
+            sr.sprite = first;
+            sr.color = Color.white;
+            SpriteFactory.UseDefaultSpriteMaterial(sr);
+        }
+
         public void Tick(float horizontal, bool grounded, float verticalVelocity)
         {
+            if (sr == null) sr = GetComponent<SpriteRenderer>();
             if (sr == null) return;
+            if ((frames == null || frames.Length == 0) && (idleFrames == null || idleFrames.Length == 0))
+                EnsureFrames();
 
             if (horizontal > 0.01f) facingRight = true;
             else if (horizontal < -0.01f) facingRight = false;

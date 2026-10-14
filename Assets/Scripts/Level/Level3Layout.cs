@@ -26,6 +26,8 @@ namespace EcoDoTempo
             var prefab = Resources.Load<GameObject>(PathFor(index));
             var root = Object.Instantiate(prefab);
             root.name = "Level " + (index + 1);
+            foreach (var renderer in root.GetComponentsInChildren<SpriteRenderer>(true))
+                SpriteFactory.UseDefaultSpriteMaterial(renderer);
 
             player = root.GetComponentInChildren<PlayerController>(true);
             if (player != null) player.EnsureBound();
