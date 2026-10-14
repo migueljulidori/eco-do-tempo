@@ -103,6 +103,10 @@ namespace EcoDoTempo
             {
                 var hit = castHits[i];
                 if (hit.collider == col || hit.collider.GetComponentInParent<PlayerController>() != null) continue;
+                // Land only on ground that stays put: not on moving parts, not on one-era blocks.
+                if (hit.collider.GetComponentInParent<Mover>() != null) continue;
+                var timed = hit.collider.GetComponent<TimeObject>();
+                if (timed != null && timed.Presence != EraPresence.Both) continue;
                 if (hit.distance < best) best = hit.distance;
             }
             if (best < float.MaxValue && best > 0.001f)

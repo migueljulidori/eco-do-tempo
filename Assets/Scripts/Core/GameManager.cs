@@ -33,7 +33,7 @@ namespace EcoDoTempo
         public string InspectText { get; private set; }
         public string Message { get; private set; }
         public float MessageAlpha => Mathf.Clamp01((messageUntil - Time.time) / 0.5f);
-        public float AutoSwitchProgress => Level.AutoSwitchInterval > 0f ? autoSwitchTimer / Level.AutoSwitchInterval : 0f;
+        public float AutoSwitchProgress => Level.AutoSwitchInterval > 0f ? Mathf.Clamp01(autoSwitchTimer / Level.AutoSwitchInterval) : 0f;
 
         // Fermata: time holds still for everything except Lia.
         public bool TimeFrozen => fermataTimer > 0f;
