@@ -51,7 +51,7 @@ namespace EcoDoTempo
 
         public void Apply(Era era)
         {
-            var sprite = LoadSprite(era);
+            var sprite = LoadSprite(era, out bool borrowed);
             if (sprite == null)
             {
                 sr.enabled = false;
@@ -60,7 +60,9 @@ namespace EcoDoTempo
 
             sr.enabled = true;
             sr.sprite = sprite;
-            sr.color = Color.white;
+            // Only one era painted so far: reuse it, tinted toward the missing era.
+            sr.color = !borrowed ? Color.white
+                : era == Era.Past ? new Color(1f, 0.86f, 0.62f) : new Color(0.62f, 0.74f, 0.95f);
             if (preservePlacement)
             {
                 transform.position = placedPosition;
@@ -82,7 +84,7 @@ namespace EcoDoTempo
                 aspect = Mathf.Max(0.1f, cam.aspect);
             }
             // Oficina art is one pixel column per map cell. Extra bleed would slide the pits.
-            bool columnFit = key == "oficina";
+            bool columnFit = IsWorkshopLayout;
             float coverW = columnFit
                 ? levelSize.x
                 : Mathf.Max(levelSize.x, halfH * aspect * 2f) + CoverPad;
@@ -92,7 +94,7 @@ namespace EcoDoTempo
             float scaledH = spriteH * scale;
             float centerX = (levelSize.x - 1) * 0.5f;
 
-            float ledgeFromBottom = key == "oficina"
+            float ledgeFromBottom = IsWorkshopLayout
                 ? OficinaLedgeFromBottom
                 : era == Era.Past ? PastLedgeFromBottom : FutureLedgeFromBottom;
             // Place the plate so the painted ledge sits on the gameplay floor top.
@@ -100,14 +102,25 @@ namespace EcoDoTempo
             transform.position = new Vector3(centerX, centerY, 0f);
         }
 
-        Sprite LoadSprite(Era era)
+        // 2900×1154 plates painted one 50 px column per map cell (oficina, coracao).
+        bool IsWorkshopLayout => key == "oficina" || key == "coracao";
+
+        Sprite LoadSprite(Era era, out bool borrowed)
+        {
+            borrowed = false;
+            var own = EraSprite(era);
+            if (own != null) return own;
+            var plain = ArtCatalog.Get($"Backgrounds/{key}");
+            if (plain != null) return plain;
+            borrowed = true;
+            return EraSprite(era.Other());
+        }
+
+        Sprite EraSprite(Era era)
         {
             string suffix = era == Era.Past ? "past" : "future";
             return ArtCatalog.Get($"Backgrounds/{key}_{suffix}_1472x576")
-                ?? ArtCatalog.Get($"Backgrounds/{key}_{suffix}")
-                ?? ArtCatalog.Get($"Backgrounds/{key}")
-                ?? ArtCatalog.Get($"Backgrounds/{key}_past_1472x576")
-                ?? ArtCatalog.Get($"Backgrounds/{key}_past");
+                ?? ArtCatalog.Get($"Backgrounds/{key}_{suffix}");
         }
     }
 }

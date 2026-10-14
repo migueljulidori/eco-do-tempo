@@ -12,8 +12,8 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "Assets/Scripts/Level/LevelData.cs"
 
-KNOWN = set(".#pf^~@D*12SicxyzhLGAaBbmMv=|")
-SOLID = set("#pfSG")
+KNOWN = set(".#!pf^~@D*12SicxyzhLGAaBbmMv=|")
+SOLID = set("#!pfSG")
 CHANNELS = {0: ("L", "x", "G"), 1: ("A", "y", "a"), 2: ("B", "z", "b")}
 
 

@@ -123,6 +123,7 @@ Os mapas ficam em `Assets/Scripts/Level/LevelData.cs`, desenhados em texto. A le
 | `v` + trilho | lâmina que se move em todas as eras |
 | `=` / `\|` | trilho horizontal / vertical, encostado na peça |
 | `~` | brasa da forja (mata só no passado) |
+| `!` | parede invisível: o pilar ou parede pintado no fundo é o que aparece |
 
 Canais: alavanca `L` / placa `x` / comporta `G` (canal 0), `A`/`y`/`a` (canal 1), `B`/`z`/`b` (canal 2).
 
@@ -136,27 +137,29 @@ python3 tools/check-levels.py
 
 Ele aponta linhas de tamanhos diferentes, fragmentos faltando, comportas sem alavanca e trilhos ausentes.
 
+Para ver o mapa desenhado por cima do fundo, nas duas eras (também sem a Unity):
+
+```bash
+python3 tools/render-levels.py
+```
+
+As imagens vão para a pasta `Previas/`. Blocos cheios existem na era da imagem; tracejados, só na outra. A linha vermelha é o chão em que o fundo foi alinhado.
+
 ### Alinhamento com os fundos pintados
 
 - Salão (`salao`, fases 1 e 5): o fosso pintado ocupa as colunas **12–17**. Mantenha o chão vazado só ali.
-- Oficina (`oficina`, fases 3 e 6): 58 colunas; vãos do chão em **13–17**, **38–44** e **54–56**.
-- Jardim (`jardim`, fases 2 e 4): chão contínuo. O relógio pintado no muro fica perto da coluna 16, e o relógio do jogo foi posto por cima dele.
+- Oficina (`oficina`, fase 3): 58 colunas; vãos do chão em **13–17**, **38–43** e **54–56**; arcos das comportas nas colunas 36 e 52; porta de madeira em 47–48.
+- Coração (`coracao`, fase 6): 58 colunas; vãos em **16–20**, **39–44** e **53–54**.
+- Jardim (`jardim`, fase 2): chão contínuo. O relógio pintado no muro fica perto da coluna 16, e o relógio do jogo foi posto por cima dele.
+- Claustro (`claustro`, fase 4): chão contínuo; pilares pintados nas colunas 2, 8, 14, 20 e 26 (as paredes da fase usam 8 e 26).
 
-## 7. Arte nova (opcional)
+## 7. Arte
 
-Prompts prontos para o ChatGPT e o script que ajusta as imagens: **[PROMPTS_ARTE.md](PROMPTS_ARTE.md)**.
+Toda a arte da lista já está no projeto, com as configurações de importação prontas (arquivos `.meta`): andar da Lia, caixa, lâmina, brasa, placas, mostrador, plataformas e os fundos do Claustro e do Coração.
 
-Tudo funciona com formas simples. Se você desenhar estes PNGs, o jogo os usa sozinho (mesmas configurações dos outros: Sprite, Point, Compression None, PPU 32):
+**Falta um arquivo:** `Backgrounds/claustro_past.png` chegou cortado (a imagem para na linha 131 de 576). Enquanto ele não vem, o passado do Claustro usa o desenho do futuro com um filtro quente. Para corrigir, gere de novo o claustro do passado (prompt 8a em [PROMPTS_ARTE.md](PROMPTS_ARTE.md)) e salve em `Assets/Resources/Backgrounds/claustro_past.png`; o jogo troca sozinho.
 
-| Arquivo | O quê | Tamanho |
-| --- | --- | --- |
-| `Resources/Props/crate.png` e `crate_future.png` | caixa de ferro nova / enferrujada | 32×32 |
-| `Resources/Props/blade.png` | lâmina do pêndulo | 32×32 |
-| `Resources/Props/fire.png` | brasa da forja (pivot embaixo) | 32×32 |
-
-Sem `crate.png`, a caixa usa o bloco de metal com um contorno claro.
-
-Ideias para fundos próprios das fases 4 e 6 (hoje elas reaproveitam jardim e oficina): `claustro_past/future.png` e `coracao_past/future.png`. Basta trocar `Background = "..."` na fase.
+Para pedir mais arte, use os prompts e o script de [PROMPTS_ARTE.md](PROMPTS_ARTE.md).
 
 ## 8. Se algo der errado
 

@@ -17,7 +17,11 @@ namespace EcoDoTempo
             if (ArtCatalog.Has("Props/fire")) ArtCatalog.SnapBottomTo(go, floor);
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
-            col.size = new Vector2(0.95f, 0.9f);
+            // Burns only where the coals are drawn: a low band on the pit floor.
+            var scale = go.transform.lossyScale;
+            float sx = Mathf.Max(0.01f, Mathf.Abs(scale.x)), sy = Mathf.Max(0.01f, Mathf.Abs(scale.y));
+            col.size = new Vector2(0.9f / sx, 0.55f / sy);
+            col.offset = new Vector2(0f, (floor + 0.275f - go.transform.position.y) / sy);
             go.AddComponent<Hazard>();
             go.AddComponent<FireFlicker>();
             SoftGlow.Attach(go, new Color(1f, 0.45f, 0.1f, 0.6f), 1.6f, 3);

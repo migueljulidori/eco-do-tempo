@@ -92,6 +92,7 @@ namespace EcoDoTempo
                             plantOrdinal++;
                             break;
                         case 'c': TimeCrate.Create(root, pos); break;
+                        case '!': InvisibleWall(root, pos); break;
                         case '~': FireFlicker.Create(root, pos); break;
                         case 'x':
                         case 'y':
@@ -172,6 +173,15 @@ namespace EcoDoTempo
         {
             if (Application.isPlaying) Object.Destroy(obj);
             else Object.DestroyImmediate(obj);
+        }
+
+        // Solid in both eras but not drawn: the painted pillar or wall in the background is the visual.
+        static void InvisibleWall(Transform root, Vector2 pos)
+        {
+            var go = new GameObject("ParedePintada");
+            go.transform.SetParent(root, false);
+            go.transform.position = pos;
+            go.AddComponent<BoxCollider2D>().size = Vector2.one;
         }
 
         // Invisible walls so Lia cannot leave the left or right edge of the map.
