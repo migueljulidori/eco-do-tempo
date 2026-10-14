@@ -14,6 +14,10 @@ namespace EcoDoTempo
         // Lit lip of the painted floor on salao_past (fraction up from the bottom).
         const float PastLedgeFromBottom = 0.26f;
         const float FutureLedgeFromBottom = 0.26f;
+        // oficina_past/future are 2900×1154. The lit lip is pixel row 664 from the top,
+        // so 490 px sit below it. Pits in that art line up with the level columns only
+        // when the image is scaled to the level width exactly.
+        const float OficinaLedgeFromBottom = 490f / 1154f;
         // Extra padding so the plate still covers after camera clamp / aspect changes.
         const float CoverPad = 2f;
 
@@ -59,14 +63,20 @@ namespace EcoDoTempo
                 halfH = cam.orthographicSize;
                 aspect = Mathf.Max(0.1f, cam.aspect);
             }
-            float coverW = Mathf.Max(levelSize.x, halfH * aspect * 2f) + CoverPad;
+            // Oficina art is one pixel column per map cell. Extra bleed would slide the pits.
+            bool columnFit = key == "oficina";
+            float coverW = columnFit
+                ? levelSize.x
+                : Mathf.Max(levelSize.x, halfH * aspect * 2f) + CoverPad;
             float scale = coverW / spriteW;
             transform.localScale = new Vector3(scale, scale, 1f);
 
             float scaledH = spriteH * scale;
             float centerX = (levelSize.x - 1) * 0.5f;
 
-            float ledgeFromBottom = era == Era.Past ? PastLedgeFromBottom : FutureLedgeFromBottom;
+            float ledgeFromBottom = key == "oficina"
+                ? OficinaLedgeFromBottom
+                : era == Era.Past ? PastLedgeFromBottom : FutureLedgeFromBottom;
             // Place the plate so the painted ledge sits on the gameplay floor top.
             float centerY = floorTopY - (ledgeFromBottom - 0.5f) * scaledH;
             transform.position = new Vector3(centerX, centerY, 0f);

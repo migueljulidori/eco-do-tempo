@@ -1,3 +1,10 @@
+INSTALADO
+oficina_past.png e oficina_future.png estão em Assets/Resources/Backgrounds.
+O lábio pintado ficou no pixel 664 (490 px a partir de baixo), não na linha de 300 px.
+O jogo alinha o chão nessa linha e encaixa a fase nas colunas reais:
+tábua 14–16, pilar 18, forja 38–43, vão da saída 54–56.
+Importação: Sprite, Point, sem compressão, sem mipmaps, pivot Center, PPU 128, máximo 4096.
+
 CONFIGURAÇÃO — FASE 3: A OFICINA
 
 Dois fundos, a fase inteira em cada arquivo. A câmera percorre a imagem. Não é uma sala só.
