@@ -49,6 +49,7 @@ namespace EcoDoTempo
             PlaceCratePiles(level.Map, root, height, claimed);
 
             int noteIndex = 0;
+            int clockIndex = 0;
             for (int row = 0; row < height; row++)
             {
                 string line = level.Map[row];
@@ -90,6 +91,29 @@ namespace EcoDoTempo
                             SeedSpot.Create(root, pos, 2 + plantOrdinal);
                             plantOrdinal++;
                             break;
+                        case 'c': TimeCrate.Create(root, pos); break;
+                        case '~': FireFlicker.Create(root, pos); break;
+                        case 'x':
+                        case 'y':
+                        case 'z':
+                            // Neighbouring cells of the same letter make one wide plate.
+                            if (col > 0 && line[col - 1] == cell) break;
+                            PressurePlate.Create(root, pos, RunLength(line, col), cell - 'x');
+                            break;
+                        case 'h':
+                            var clock = clockIndex < level.Clocks.Length ? level.Clocks[clockIndex] : new ClockPuzzle(12, 0);
+                            clockIndex++;
+                            ClockDial.Create(root, pos, clock);
+                            break;
+                        case 'm':
+                        case 'M':
+                            if (col > 0 && line[col - 1] == cell) break;
+                            PlaceMover(root, level.Map, row, col, RunLength(line, col), height,
+                                cell == 'm' ? MoverKind.PastPlatform : MoverKind.Platform);
+                            break;
+                        case 'v':
+                            PlaceMover(root, level.Map, row, col, 1, height, MoverKind.Blade);
+                            break;
                         case 'i':
                             var note = noteIndex < level.Notes.Length
                                 ? level.Notes[noteIndex]
@@ -106,6 +130,48 @@ namespace EcoDoTempo
             // Top of the solid under Lia — not the open tops of the side walls.
             result.FloorTopY = result.Spawn.y - 0.5f;
             return result;
+        }
+
+        static int RunLength(string line, int start)
+        {
+            int end = start;
+            while (end < line.Length && line[end] == line[start]) end++;
+            return end - start;
+        }
+
+        // A mover's track starts next to it: '=' to the right or left, '|' above or below.
+        static void PlaceMover(Transform root, string[] map, int row, int col, int cells, int height, MoverKind kind)
+        {
+            int last = col + cells - 1;
+            Vector2 offset = Vector2.zero;
+            int k = Track(map, height, row, last + 1, 0, 1, '=');
+            if (k > 0) offset = new Vector2(k, 0f);
+            else if ((k = Track(map, height, row, col - 1, 0, -1, '=')) > 0) offset = new Vector2(-k, 0f);
+            else if ((k = Track(map, height, row - 1, col, -1, 0, '|')) > 0) offset = new Vector2(0f, k);
+            else if ((k = Track(map, height, row + 1, col, 1, 0, '|')) > 0) offset = new Vector2(0f, -k);
+
+            var first = Cell(col, row, height);
+            var center = new Vector2(first.x + (cells - 1) * 0.5f, first.y);
+            Mover.Create(root, center, cells, offset, kind);
+        }
+
+        static int Track(string[] map, int height, int row, int col, int dRow, int dCol, char rail)
+        {
+            int count = 0;
+            while (row >= 0 && CharAt(map, row, col, height) == rail)
+            {
+                count++;
+                row += dRow;
+                col += dCol;
+            }
+            return count;
+        }
+
+        // Edit-mode builds (Hierarchy preview) cannot use Destroy.
+        static void SafeDestroy(Object obj)
+        {
+            if (Application.isPlaying) Object.Destroy(obj);
+            else Object.DestroyImmediate(obj);
         }
 
         // Invisible walls so Lia cannot leave the left or right edge of the map.
@@ -181,7 +247,7 @@ namespace EcoDoTempo
                     }
                     else
                     {
-                        Object.Destroy(strip);
+                        SafeDestroy(strip);
                     }
                 }
             }

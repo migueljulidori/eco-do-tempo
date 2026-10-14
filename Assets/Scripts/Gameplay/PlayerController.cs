@@ -6,6 +6,7 @@ namespace EcoDoTempo
     public class PlayerController : MonoBehaviour
     {
         static readonly Vector2 BodySize = new Vector2(0.8f, 0.9f);
+        public static Vector2 BodyColliderSize => new Vector2(BodySize.x - 0.06f, BodySize.y - 0.08f);
         const float Speed = 6f;
         const float JumpVelocity = 12.5f;
         const float GravityScale = 3f;
@@ -22,8 +23,10 @@ namespace EcoDoTempo
         Vector2 spawn;
         float coyoteTimer;
         float jumpBufferTimer;
+        Mover groundMover;
         readonly List<Collider2D> hits = new List<Collider2D>();
-        static readonly ContactFilter2D AnyCollider = ContactFilter2D.noFilter;
+        static readonly ContactFilter2D AnyCollider = new ContactFilter2D().NoFilter();
+        SpriteRenderer visualRenderer;
 
         public IInteractable Nearby { get; private set; }
 
@@ -72,7 +75,7 @@ namespace EcoDoTempo
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             var body = go.AddComponent<BoxCollider2D>();
-            body.size = new Vector2(BodySize.x - 0.06f, BodySize.y - 0.08f);
+            body.size = BodyColliderSize;
             body.offset = Vector2.zero;
             body.edgeRadius = 0.01f;
             body.sharedMaterial = new PhysicsMaterial2D("NoFriction") { friction = 0f, bounciness = 0f };
@@ -128,14 +131,31 @@ namespace EcoDoTempo
             coyoteTimer = grounded ? CoyoteTime : coyoteTimer - dt;
             jumpBufferTimer = GameInput.JumpPressed ? JumpBufferTime : jumpBufferTimer - dt;
 
+            float speed = Speed;
+            if (grounded && input != 0f)
+            {
+                var crate = CrateAhead(Mathf.Sign(input));
+                if (crate != null && TimeCrate.CanMoveNow)
+                {
+                    crate.Push(input);
+                    speed = TimeCrate.PushSpeed;
+                }
+            }
+
+            // Moving platforms carry whoever stands on them.
+            var carry = groundMover != null ? groundMover.Velocity : Vector2.zero;
+
             var v = Velocity;
-            v.x = input * Speed;
+            v.x = input * speed + carry.x;
+            bool jumped = false;
             if (jumpBufferTimer > 0f && coyoteTimer > 0f)
             {
-                v.y = JumpVelocity;
+                v.y = JumpVelocity + Mathf.Max(0f, carry.y);
                 jumpBufferTimer = 0f;
                 coyoteTimer = 0f;
+                jumped = true;
             }
+            if (!jumped && carry.y < 0f && v.y <= 0.01f) v.y = carry.y;
             if (GameInput.JumpReleased && v.y > 0f) v.y *= 0.5f;
             Velocity = v;
 
@@ -144,18 +164,64 @@ namespace EcoDoTempo
             if (spriteAnim != null) spriteAnim.Tick(input, grounded, Velocity.y);
 
             Nearby = FindInteractable(gm.CurrentEra);
-            if (Nearby != null && GameInput.InteractPressed) Nearby.Interact(gm.CurrentEra);
+            if (GameInput.InteractPressed)
+            {
+                gm.Echo.NoteInteract();
+                if (Nearby != null) Nearby.Interact(gm.CurrentEra);
+            }
 
             if (transform.position.y < FallLimit) Die();
         }
 
         bool IsGrounded()
         {
+            groundMover = null;
+            bool grounded = false;
             var feet = (Vector2)transform.position + Vector2.down * (BodySize.y * 0.5f + 0.05f);
             int count = Physics2D.OverlapBox(feet, new Vector2(BodySize.x * 0.85f, 0.1f), 0f, AnyCollider, hits);
             for (int i = 0; i < count; i++)
-                if (hits[i] != body && !hits[i].isTrigger) return true;
-            return false;
+            {
+                if (hits[i] == body || hits[i].isTrigger) continue;
+                grounded = true;
+                var mover = hits[i].GetComponentInParent<Mover>();
+                if (mover != null) groundMover = mover;
+            }
+            return grounded;
+        }
+
+        TimeCrate CrateAhead(float dir)
+        {
+            var probe = (Vector2)transform.position + new Vector2(dir * (BodySize.x * 0.5f + 0.08f), -0.05f);
+            int count = Physics2D.OverlapBox(probe, new Vector2(0.12f, BodySize.y * 0.6f), 0f, AnyCollider, hits);
+            for (int i = 0; i < count; i++)
+            {
+                if (hits[i].isTrigger) continue;
+                var crate = hits[i].GetComponentInParent<TimeCrate>();
+                if (crate != null) return crate;
+            }
+            return null;
+        }
+
+        // One frame of Lia for the echo to replay.
+        public EchoFrame Snapshot(bool interact)
+        {
+            if (visualRenderer == null && visual != null) visualRenderer = visual.GetComponent<SpriteRenderer>();
+            return new EchoFrame
+            {
+                Position = rb.position,
+                Sprite = visualRenderer != null ? visualRenderer.sprite : null,
+                FlipX = visualRenderer != null && visualRenderer.flipX,
+                VisualOffset = visual != null ? (Vector2)visual.localPosition : Vector2.zero,
+                VisualScale = visual != null ? (Vector2)visual.localScale : Vector2.one,
+                Interact = interact,
+            };
+        }
+
+        public void TeleportTo(Vector2 position)
+        {
+            rb.position = position;
+            transform.position = position;
+            Velocity = Vector2.zero;
         }
 
         IInteractable FindInteractable(Era era)
@@ -175,9 +241,7 @@ namespace EcoDoTempo
 
         public void Die()
         {
-            rb.position = spawn;
-            transform.position = spawn;
-            Velocity = Vector2.zero;
+            TeleportTo(spawn);
             GameManager.Instance.OnPlayerDied();
         }
     }

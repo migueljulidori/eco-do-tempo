@@ -18,9 +18,22 @@ namespace EcoDoTempo
         public static bool JumpPressed => Down(KeyCode.Space, KeyCode.W, KeyCode.UpArrow);
         public static bool JumpReleased => Up(KeyCode.Space, KeyCode.W, KeyCode.UpArrow);
         public static bool TimeSwitchPressed => Down(KeyCode.Q, KeyCode.LeftShift);
+        public static bool EchoPressed => Down(KeyCode.F);
+        public static bool FermataPressed => Down(KeyCode.C);
         public static bool InteractPressed => Down(KeyCode.E);
         public static bool ConfirmPressed => Down(KeyCode.Return, KeyCode.KeypadEnter);
         public static bool RestartPressed => Down(KeyCode.R);
+
+        // Number row 1..9 → 0..8, or -1. Used by the level shortcut on the title screen.
+        public static int NumberPressed
+        {
+            get
+            {
+                for (int i = 0; i < 9; i++)
+                    if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))) return i;
+                return -1;
+            }
+        }
 #elif ENABLE_INPUT_SYSTEM
         static bool Held(params Key[] keys) { var kb = Keyboard.current; if (kb == null) return false; foreach (var k in keys) if (kb[k].isPressed) return true; return false; }
         static bool Down(params Key[] keys) { var kb = Keyboard.current; if (kb == null) return false; foreach (var k in keys) if (kb[k].wasPressedThisFrame) return true; return false; }
@@ -31,9 +44,21 @@ namespace EcoDoTempo
         public static bool JumpPressed => Down(Key.Space, Key.W, Key.UpArrow);
         public static bool JumpReleased => Up(Key.Space, Key.W, Key.UpArrow);
         public static bool TimeSwitchPressed => Down(Key.Q, Key.LeftShift);
+        public static bool EchoPressed => Down(Key.F);
+        public static bool FermataPressed => Down(Key.C);
         public static bool InteractPressed => Down(Key.E);
         public static bool ConfirmPressed => Down(Key.Enter, Key.NumpadEnter);
         public static bool RestartPressed => Down(Key.R);
+
+        public static int NumberPressed
+        {
+            get
+            {
+                for (int i = 0; i < 9; i++)
+                    if (Down((Key)((int)Key.Digit1 + i))) return i;
+                return -1;
+            }
+        }
 #endif
     }
 }

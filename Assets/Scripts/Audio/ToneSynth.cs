@@ -64,6 +64,45 @@ namespace EcoDoTempo
 
         public void PlayBlocked() => PlayNote(110f, 0.25f, 0.4f);
 
+        // Echo: a quick falling glide, like tape running backwards.
+        public void PlayRewind()
+        {
+            const string key = "rewind";
+            if (!cache.TryGetValue(key, out var clip))
+            {
+                const float duration = 0.5f;
+                float phase = 0f;
+                clip = Generate(key, duration, (t, i) =>
+                {
+                    float f = Mathf.Lerp(1400f, 200f, Mathf.Sqrt(t / duration));
+                    phase += 2f * Mathf.PI * f / SampleRate;
+                    float wobble = 0.6f + 0.4f * Mathf.Sin(t * 60f);
+                    return Mathf.Sin(phase) * wobble * (1f - t / duration) * 0.5f;
+                });
+                cache[key] = clip;
+            }
+            source.PlayOneShot(clip, 0.4f);
+        }
+
+        // Fermata: a held open fifth that fades out.
+        public void PlayFermata()
+        {
+            const string key = "fermata";
+            if (!cache.TryGetValue(key, out var clip))
+            {
+                const float duration = 1.6f;
+                clip = Generate(key, duration, (t, i) =>
+                {
+                    float env = Mathf.Min(1f, t * 20f) * Mathf.Exp(-t * 1.5f);
+                    float a = Mathf.Sin(2f * Mathf.PI * 261.6f * t);
+                    float b = Mathf.Sin(2f * Mathf.PI * 392f * t);
+                    return env * (a * 0.5f + b * 0.35f);
+                });
+                cache[key] = clip;
+            }
+            source.PlayOneShot(clip, 0.4f);
+        }
+
         public void PlayMelody(IEnumerable<int> noteIndices)
         {
             var notes = new List<int>(noteIndices);

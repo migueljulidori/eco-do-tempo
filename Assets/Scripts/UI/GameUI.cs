@@ -56,6 +56,9 @@ namespace EcoDoTempo
             Label(new Rect(0, 200, width, 100), "ECO DO TEMPO", title, Color.Lerp(Palette.PastBlock, Palette.FutureBlock, Mathf.PingPong(Time.time * 0.3f, 1f)));
             Label(new Rect(0, 300, width, 40), "Um quebra-cabeça entre passado e futuro", subtitle, Color.white);
             Label(new Rect(0, 480, width, 40), "Pressione ENTER para começar", body, new Color(1, 1, 1, pulse));
+            if (GameManager.LevelShortcutsEnabled)
+                Label(new Rect(0, 640, width, 30), $"Teste: teclas 1–{LevelData.Levels.Length} abrem uma fase direto", center,
+                    new Color(1, 1, 1, 0.45f));
         }
 
         void DrawStory(GameManager gm)
@@ -70,12 +73,34 @@ namespace EcoDoTempo
         {
             var eraColor = gm.CurrentEra == Era.Past ? Palette.PastBlock : Palette.FutureBlock;
 
-            Fill(new Rect(10, 10, 360, 96), new Color(0, 0, 0, 0.45f));
-            Label(new Rect(22, 14, 340, 26), $"Fase {gm.LevelIndex + 1}: {gm.Level.Name}", small, Color.white);
-            Label(new Rect(22, 40, 340, 30), gm.CurrentEra.DisplayName(), eraLabel, eraColor);
-            Label(new Rect(22, 74, 340, 26), $"Fragmentos: {gm.FragmentsCollected}/{gm.FragmentsTotal}", small, Palette.Fragment);
+            if (gm.TimeFrozen)
+            {
+                // Fermata: the whole frame goes pale and still.
+                Fill(new Rect(0, 0, width, VirtualHeight), new Color(0.75f, 0.9f, 1f, 0.12f));
+                var bar = new Rect(width * 0.5f - 160, VirtualHeight - 160, 320, 10);
+                Fill(bar, new Color(0, 0, 0, 0.5f));
+                Fill(new Rect(bar.x, bar.y, bar.width * gm.FermataLeft, bar.height), Palette.Fermata);
+                Label(new Rect(bar.x, bar.y - 28, bar.width, 24), "FERMATA — C para soltar", center, Palette.Fermata);
+            }
+
+            Fill(new Rect(10, 10, 380, 126), new Color(0, 0, 0, 0.45f));
+            Label(new Rect(22, 14, 360, 26), $"Fase {gm.LevelIndex + 1}: {gm.Level.Name}", small, Color.white);
+            Label(new Rect(22, 40, 360, 30), gm.CurrentEra.DisplayName(), eraLabel, eraColor);
+            Label(new Rect(22, 74, 360, 26), $"Fragmentos: {gm.FragmentsCollected}/{gm.FragmentsTotal}", small, Palette.Fragment);
+            DrawPowers(gm, new Rect(22, 102, 360, 26));
 
             DrawMelody(gm);
+
+            if (gm.Echo.Recording)
+            {
+                var bar = new Rect(width * 0.5f - 200, VirtualHeight - 190, 400, 12);
+                float blink = 0.6f + 0.4f * Mathf.Sin(Time.time * 8f);
+                Fill(bar, new Color(0, 0, 0, 0.55f));
+                Fill(new Rect(bar.x, bar.y, bar.width * gm.Echo.RecordProgress, bar.height), new Color(1f, 0.35f, 0.35f));
+                Label(new Rect(bar.x, bar.y - 28, bar.width, 24),
+                    $"REC  GRAVANDO ECO  {gm.Echo.RecordedSeconds:0.0}s / {EchoSystem.MaxSeconds:0}s   —   F para voltar no tempo",
+                    center, new Color(1f, 0.5f, 0.5f, blink));
+            }
 
             if (gm.Level.AutoSwitchInterval > 0f)
             {
@@ -91,15 +116,45 @@ namespace EcoDoTempo
 
             if (gm.MessageAlpha > 0f)
             {
-                var rect = new Rect(width * 0.2f, 130, width * 0.6f, 60);
+                var rect = new Rect(width * 0.2f, 150, width * 0.6f, 60);
                 Fill(rect, new Color(0, 0, 0, 0.55f * gm.MessageAlpha));
                 Label(rect, gm.Message, message, new Color(1, 1, 1, gm.MessageAlpha));
             }
 
-            string controls = gm.Level.AutoSwitchInterval > 0f
-                ? "A/D mover   ESPAÇO pular   E interagir   R reiniciar   (Q desativado nesta fase)"
-                : "A/D mover   ESPAÇO pular   Q alternar tempo   E interagir   R reiniciar";
-            Label(new Rect(0, VirtualHeight - 36, width, 28), controls, center, new Color(1, 1, 1, 0.6f));
+            Label(new Rect(0, VirtualHeight - 36, width, 28), Controls(gm), center, new Color(1, 1, 1, 0.6f));
+        }
+
+        static string Controls(GameManager gm)
+        {
+            var text = "A/D mover   ESPAÇO pular   E interagir";
+            if (gm.EraSwitchByHand) text += "   Q era";
+            if (gm.HasPower(Power.Echo)) text += "   F eco";
+            if (gm.HasPower(Power.Fermata)) text += "   C fermata";
+            text += "   R reiniciar";
+            if (gm.Level.AutoSwitchInterval > 0f) text += "   (Q desativado)";
+            return text;
+        }
+
+        // The tuning fork's notes: which time powers this level allows and whether they are ready.
+        void DrawPowers(GameManager gm, Rect rect)
+        {
+            float x = rect.x;
+            x = PowerTag(gm, x, rect.y, "Q Eras", gm.EraSwitchByHand, true, Palette.PastBlock);
+            x = PowerTag(gm, x, rect.y, gm.Echo.HasEcho ? "F Eco (ativo)" : "F Eco", gm.HasPower(Power.Echo),
+                !gm.Echo.Recording, Palette.Echo);
+            PowerTag(gm, x, rect.y, "C Fermata", gm.HasPower(Power.Fermata), gm.FermataReady || gm.TimeFrozen,
+                Palette.Fermata);
+        }
+
+        float PowerTag(GameManager gm, float x, float y, string text, bool available, bool ready, Color color)
+        {
+            if (!available) return x;
+            float w = small.CalcSize(new GUIContent(text)).x + 14f;
+            var c = color;
+            c.a = ready ? 0.9f : 0.35f;
+            Fill(new Rect(x, y + 2, w, 22), new Color(0, 0, 0, 0.35f));
+            Label(new Rect(x + 7, y, w, 26), text, small, c);
+            return x + w + 6f;
         }
 
         void DrawMelody(GameManager gm)

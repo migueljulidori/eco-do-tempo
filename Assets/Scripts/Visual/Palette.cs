@@ -41,6 +41,24 @@ namespace EcoDoTempo
         public static readonly Color Player = new Color(0.98f, 0.95f, 0.90f);
         public static readonly Color PlayerScarf = new Color(0.85f, 0.20f, 0.30f);
 
+        public static readonly Color Fire = new Color(1.00f, 0.50f, 0.15f);
+        public static readonly Color Blade = new Color(0.85f, 0.88f, 0.95f);
+        public static readonly Color PlateBase = new Color(0.20f, 0.18f, 0.16f);
+        public static readonly Color ClockFacePast = new Color(0.96f, 0.88f, 0.68f);
+        public static readonly Color ClockFaceFuture = new Color(0.55f, 0.60f, 0.68f);
+        public static readonly Color Echo = new Color(0.55f, 0.92f, 1.00f, 0.55f);
+        public static readonly Color Fermata = new Color(0.70f, 0.88f, 1.00f);
+
+        // Levers, plates, clocks and gates of the same channel share a color.
+        static readonly Color[] Channels =
+        {
+            new Color(1.00f, 0.76f, 0.30f),
+            new Color(0.35f, 0.92f, 0.85f),
+            new Color(0.80f, 0.55f, 1.00f),
+        };
+
+        public static Color Channel(int channel) => Channels[Mathf.Clamp(channel, 0, Channels.Length - 1)];
+
         public static Color Background(Era era) => era == Era.Past ? PastBackground : FutureBackground;
     }
 }

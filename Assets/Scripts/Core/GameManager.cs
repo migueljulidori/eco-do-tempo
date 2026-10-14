@@ -8,6 +8,10 @@ namespace EcoDoTempo
 
     public class GameManager : MonoBehaviour
     {
+        public const int ChannelCount = 3;
+        public const float FermataSeconds = 3f;
+        public const float FermataCooldown = 1.5f;
+
         public static GameManager Instance { get; private set; }
 
         public GameState State { get; private set; }
@@ -19,6 +23,8 @@ namespace EcoDoTempo
         public bool AllFragmentsCollected => FragmentsCollected >= FragmentsTotal;
         public PlayerController Player { get; private set; }
         public ToneSynth Synth { get; private set; }
+        public EchoSystem Echo { get; private set; }
+        public Transform LevelRoot => levelRoot != null ? levelRoot.transform : null;
 
         public readonly HashSet<int> CollectedNotes = new HashSet<int>();
 
@@ -29,8 +35,18 @@ namespace EcoDoTempo
         public float MessageAlpha => Mathf.Clamp01((messageUntil - Time.time) / 0.5f);
         public float AutoSwitchProgress => Level.AutoSwitchInterval > 0f ? autoSwitchTimer / Level.AutoSwitchInterval : 0f;
 
+        // Fermata: time holds still for everything except Lia.
+        public bool TimeFrozen => fermataTimer > 0f;
+        public float FermataLeft => Mathf.Clamp01(fermataTimer / FermataSeconds);
+        public bool FermataReady => fermataTimer <= 0f && fermataCooldown <= 0f;
+
+        public bool HasPower(Power power) => (Level.Powers & power) != 0;
+        public bool EraSwitchByHand => HasPower(Power.Era) && Level.AutoSwitchInterval <= 0f;
+
         readonly List<TimeObject> timeObjects = new List<TimeObject>();
         readonly List<Gate> gates = new List<Gate>();
+        readonly List<PressurePlate> plates = new List<PressurePlate>();
+        readonly bool[] latched = new bool[ChannelCount];
         readonly HashSet<int> notesAtLevelStart = new HashSet<int>();
         Action onStoryDone;
         GameObject levelRoot;
@@ -40,28 +56,27 @@ namespace EcoDoTempo
         Vector2Int levelSize;
         float messageUntil;
         float autoSwitchTimer;
+        float fermataTimer;
+        float fermataCooldown;
         int stateChangedFrame;
 
         void Awake()
         {
             Instance = this;
             Synth = gameObject.AddComponent<ToneSynth>();
+            Echo = gameObject.AddComponent<EchoSystem>();
             gameObject.AddComponent<GameUI>();
             SetupCamera();
             HideAuthoringLevels();
             SetState(GameState.Title);
         }
 
-        // The placed levels stay in the Hierarchy for editing. Play uses a fresh copy.
+        // Old scenes may still hold placed copies of the levels. Play always builds from LevelData.
         static void HideAuthoringLevels()
         {
             var catalogs = UnityEngine.Object.FindObjectsByType<LevelCatalog>(FindObjectsInactive.Include);
             foreach (var catalog in catalogs)
-            {
-                if (catalog.Levels == null) continue;
-                foreach (var level in catalog.Levels)
-                    if (level != null) level.SetActive(false);
-            }
+                catalog.gameObject.SetActive(false);
         }
 
         void OnDestroy()
@@ -93,16 +108,19 @@ namespace EcoDoTempo
 
         bool InputReady => Time.frameCount > stateChangedFrame;
 
-        [ContextMenu("Debug/Abrir fase 1 sem introdução")]
-        void DebugLevelOne() => DebugLoadLevel(0);
-        [ContextMenu("Debug/Abrir fase 2 sem introdução")]
-        void DebugLevelTwo() => DebugLoadLevel(1);
-        [ContextMenu("Debug/Abrir fase 3 sem introdução")]
-        void DebugLevelThree() => DebugLoadLevel(2);
+        // Testing shortcuts: in the Inspector, ⋮ on GameManager, or keys 1–6 on the title screen.
+        [ContextMenu("Debug/Abrir fase 1 sem introdução")] void DebugLevel1() => DebugLoadLevel(0);
+        [ContextMenu("Debug/Abrir fase 2 sem introdução")] void DebugLevel2() => DebugLoadLevel(1);
+        [ContextMenu("Debug/Abrir fase 3 sem introdução")] void DebugLevel3() => DebugLoadLevel(2);
+        [ContextMenu("Debug/Abrir fase 4 sem introdução")] void DebugLevel4() => DebugLoadLevel(3);
+        [ContextMenu("Debug/Abrir fase 5 sem introdução")] void DebugLevel5() => DebugLoadLevel(4);
+        [ContextMenu("Debug/Abrir fase 6 sem introdução")] void DebugLevel6() => DebugLoadLevel(5);
+
+        public static bool LevelShortcutsEnabled => Application.isEditor || Debug.isDebugBuild;
 
         void DebugLoadLevel(int index)
         {
-            if (!Application.isPlaying || index >= LevelData.Levels.Length) return;
+            if (!Application.isPlaying || index < 0 || index >= LevelData.Levels.Length) return;
             CollectedNotes.Clear();
             notesAtLevelStart.Clear();
             LoadLevel(index, showIntro: false);
@@ -119,6 +137,10 @@ namespace EcoDoTempo
                     {
                         CollectedNotes.Clear();
                         ShowStory(LevelData.Intro, () => LoadLevel(0));
+                    }
+                    else if (LevelShortcutsEnabled && GameInput.NumberPressed >= 0)
+                    {
+                        DebugLoadLevel(GameInput.NumberPressed);
                     }
                     break;
 
@@ -162,20 +184,63 @@ namespace EcoDoTempo
                 return;
             }
 
+            UpdateFermata();
+
+            if (GameInput.EchoPressed)
+            {
+                if (HasPower(Power.Echo)) Echo.Toggle();
+                else ShowMessage("O diapasão ainda não sabe ecoar.", 2f);
+            }
+
             if (Level.AutoSwitchInterval > 0f)
             {
-                autoSwitchTimer += Time.deltaTime;
+                if (!TimeFrozen) autoSwitchTimer += Time.deltaTime;
                 if (autoSwitchTimer >= Level.AutoSwitchInterval)
                 {
                     autoSwitchTimer = 0f;
                     TrySwitchEra(silentWhenBlocked: true);
                 }
-                if (GameInput.TimeSwitchPressed) ShowMessage("O diapasão não responde. O tempo oscila sozinho aqui.");
+                if (GameInput.TimeSwitchPressed)
+                    ShowMessage(HasPower(Power.Fermata)
+                        ? "O tempo oscila sozinho aqui. Segure-o com a fermata (C)."
+                        : "O diapasão não responde. O tempo oscila sozinho aqui.");
             }
             else if (GameInput.TimeSwitchPressed)
             {
-                TrySwitchEra(silentWhenBlocked: false);
+                if (HasPower(Power.Era)) TrySwitchEra(silentWhenBlocked: false);
             }
+
+            UpdateChannels();
+        }
+
+        void UpdateFermata()
+        {
+            if (fermataTimer > 0f)
+            {
+                fermataTimer -= Time.deltaTime;
+                if (fermataTimer <= 0f || GameInput.FermataPressed) EndFermata();
+                return;
+            }
+
+            if (fermataCooldown > 0f) fermataCooldown -= Time.deltaTime;
+            if (!GameInput.FermataPressed) return;
+            if (!HasPower(Power.Fermata))
+            {
+                ShowMessage("O diapasão ainda não sabe segurar uma nota.", 2f);
+                return;
+            }
+            if (fermataCooldown > 0f) return;
+
+            fermataTimer = FermataSeconds;
+            Synth.PlayFermata();
+            ShowMessage("Fermata: o tempo prende a respiração.", 1.5f);
+        }
+
+        void EndFermata()
+        {
+            fermataTimer = 0f;
+            fermataCooldown = FermataCooldown;
+            Synth.PlayNote(392f, 0.25f, 0.3f);
         }
 
         // ---------- Story ----------
@@ -208,28 +273,16 @@ namespace EcoDoTempo
             }
 
             FragmentsCollected = 0;
-            if (Level3Layout.HasPrefab(index))
-            {
-                levelRoot = Level3Layout.Create(index, Level, out var player, out levelBackground,
-                    out var fragments, out levelSize, out var floorTop);
-                FragmentsTotal = fragments;
-                Player = player;
-                camFollow.SetTarget(Player.transform, levelSize, floorTop);
-            }
-            else
-            {
-                levelRoot = new GameObject("Level " + (index + 1));
-                var result = LevelBuilder.Build(Level, levelRoot.transform);
-                levelSize = result.Size;
-                FragmentsTotal = result.FragmentCount;
+            levelRoot = new GameObject("Level " + (index + 1));
+            var result = LevelBuilder.Build(Level, levelRoot.transform);
+            levelSize = result.Size;
+            FragmentsTotal = result.FragmentCount;
 
-                levelBackground = LevelBackground.Create(levelRoot.transform, Level.Background, levelSize, result.FloorTopY);
-                Player = PlayerController.Create(result.Spawn, levelRoot.transform);
-                camFollow.SetTarget(Player.transform, levelSize, result.FloorTopY);
-            }
+            levelBackground = LevelBackground.Create(levelRoot.transform, Level.Background, levelSize, result.FloorTopY);
+            Player = PlayerController.Create(result.Spawn, levelRoot.transform);
+            camFollow.SetTarget(Player.transform, levelSize, result.FloorTopY);
 
             CurrentEra = Level.StartEra;
-            autoSwitchTimer = 0f;
             ApplyEra();
 
             if (showIntro)
@@ -250,6 +303,12 @@ namespace EcoDoTempo
         {
             timeObjects.Clear();
             gates.Clear();
+            plates.Clear();
+            Array.Clear(latched, 0, latched.Length);
+            Echo.ResetAll();
+            autoSwitchTimer = 0f;
+            fermataTimer = 0f;
+            fermataCooldown = 0f;
             Player = null;
             levelBackground = null;
             if (levelRoot != null) Destroy(levelRoot);
@@ -258,6 +317,8 @@ namespace EcoDoTempo
 
         void CompleteLevel()
         {
+            Echo.Cancel();
+            fermataTimer = 0f;
             SetState(GameState.LevelComplete);
             Synth.PlayMelody(CollectedNotes);
         }
@@ -279,6 +340,7 @@ namespace EcoDoTempo
 
         public void Register(TimeObject obj) => timeObjects.Add(obj);
         public void RegisterGate(Gate gate) => gates.Add(gate);
+        public void RegisterPlate(PressurePlate plate) => plates.Add(plate);
 
         public bool TrySwitchEra(bool silentWhenBlocked)
         {
@@ -315,6 +377,35 @@ namespace EcoDoTempo
             cam.backgroundColor = Palette.Background(CurrentEra);
         }
 
+        // ---------- Channels (levers, clocks, plates → gates) ----------
+
+        public void LatchChannel(int channel)
+        {
+            if (channel < 0 || channel >= ChannelCount) return;
+            latched[channel] = true;
+            UpdateChannels();
+        }
+
+        public bool ChannelOpen(int channel)
+        {
+            if (channel < 0 || channel >= ChannelCount) return false;
+            if (latched[channel]) return true;
+            bool any = false;
+            foreach (var plate in plates)
+            {
+                if (plate == null || plate.Channel != channel) continue;
+                if (!plate.Pressed) return false;
+                any = true;
+            }
+            return any;
+        }
+
+        void UpdateChannels()
+        {
+            foreach (var gate in gates)
+                if (gate != null) gate.SetOpen(ChannelOpen(gate.Channel));
+        }
+
         // ---------- Gameplay events ----------
 
         public void CollectFragment(MelodyFragment fragment)
@@ -339,18 +430,12 @@ namespace EcoDoTempo
         public void OnPlayerDied()
         {
             Synth.PlayBlocked();
+            Echo.Cancel();
+            if (fermataTimer > 0f) EndFermata();
             CurrentEra = Level.StartEra;
             autoSwitchTimer = 0f;
             ApplyEra();
-            ShowMessage("O eco te trouxe de volta ao início.");
-        }
-
-        public void OpenGates(int channel = 0)
-        {
-            foreach (var gate in gates)
-                if (gate != null && gate.Channel == channel)
-                    gate.Open();
-            ApplyEra();
+            ShowMessage("O eco te trouxe de volta ao início. (R reinicia a fase inteira.)");
         }
 
         public void Inspect(string text)

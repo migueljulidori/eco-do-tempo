@@ -5,9 +5,9 @@ namespace EcoDoTempo
     // Only works in the past; opens gates on the same channel in every era.
     public class Lever : MonoBehaviour, IInteractable
     {
-        bool pulled;
-        Vector2 cell;
-        int channel;
+        [SerializeField] bool pulled;
+        [SerializeField] Vector2 cell;
+        [SerializeField] int channel;
 
         public static void Create(Transform root, Vector2 pos, int channel = 0)
         {
@@ -21,13 +21,8 @@ namespace EcoDoTempo
             var lever = go.AddComponent<Lever>();
             lever.cell = pos;
             lever.channel = channel;
+            TimeBodies.AddChannelBadge(go, pos + Vector2.up * 0.75f, channel);
             TimeObject.Add(go, EraPresence.Both, Palette.Lever, Palette.FutureLever, solid: false);
-        }
-
-        public void BindChannel(int ch)
-        {
-            channel = ch;
-            cell = transform.position;
         }
 
         public string Prompt(Era era) =>
@@ -51,12 +46,9 @@ namespace EcoDoTempo
             }
             else if (!ArtCatalog.Has("Props/lever"))
                 transform.rotation = Quaternion.Euler(0f, 0f, -30f);
-            gm.OpenGates(channel);
+            gm.LatchChannel(channel);
             gm.Synth.PlayNote(220f + channel * 40f, 0.4f);
-            string which = channel <= 0 ? "A comporta da oficina"
-                : channel == 1 ? "A segunda comporta"
-                : "Uma comporta distante";
-            gm.ShowMessage($"{which} se abriu... em todas as eras.");
+            gm.ShowMessage("Uma comporta da mesma cor se abriu... em todas as eras.");
         }
     }
 }

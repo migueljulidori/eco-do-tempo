@@ -1,11 +1,16 @@
 # Eco do Tempo
 
-Jogo de plataforma e puzzle 2D na Unity. Lia viaja entre o **passado** e o **futuro** para reunir os 12 fragmentos da *Canção do Eco*.
+Jogo de plataforma e puzzle 2D na Unity. Lia viaja entre o **passado** e o **futuro** para reunir os 18 fragmentos da *Canção do Eco*.
+
+São seis fases, cada uma construída em torno de uma ideia de tempo (inspiração: *That Level Again* e *Cube Escape*). O diapasão de Lia aprende três poderes: trocar de era (Q), deixar um eco de si mesma (F) e segurar o tempo com a fermata (C).
+
+**Passo a passo na Unity, roteiro de teste e como editar as fases: [GUIA_UNITY.md](GUIA_UNITY.md).**
 
 ## Como rodar
 
 1. No Unity Hub: **Add > Add project from disk** e selecione esta pasta (Unity 2022.3 LTS ou Unity 6).
 2. Abra qualquer cena (a `SampleScene` serve) e aperte **Play**. O jogo monta tudo por código.
+3. Na tela de título, as teclas **1–6** abrem uma fase direto (só no editor).
 
 ## Controles
 
@@ -14,7 +19,9 @@ Jogo de plataforma e puzzle 2D na Unity. Lia viaja entre o **passado** e o **fut
 | A/D ou setas | mover |
 | Espaço / W | pular |
 | Q | alternar passado/futuro |
-| E | interagir / examinar |
+| F | eco: gravar; F de novo volta no tempo e deixa um eco repetindo seus passos |
+| C | fermata: segurar o tempo por 3 s |
+| E | interagir / examinar / girar relógio |
 | R | reiniciar a fase |
 | Enter | avançar textos |
 
@@ -71,6 +78,10 @@ Sugestão tiles/props: canvas **32×32** (porta pode ser **32×64**). Filter Mod
 
 ## Criando fases
 
-As fases ficam em `Assets/Scripts/Level/LevelData.cs`, desenhadas em texto (ASCII). A legenda está no comentário de `LevelDefinition`.
+As fases ficam em `Assets/Scripts/Level/LevelData.cs`, desenhadas em texto (ASCII). A legenda está no comentário de `LevelDefinition`. O jogo e a prévia na Hierarchy saem sempre desse texto.
 
-Alavancas e comportas usam **canais**: `L` abre só `G`, `A` abre só `a`, `B` abre só `b`. Assim dá para fazer puzzles em etapas (uma comporta por alavanca).
+Alavancas, placas, relógios e comportas usam **canais** (a cor do losango mostra o canal): `L`/`x`/`G` no canal 0, `A`/`y`/`a` no 1, `B`/`z`/`b` no 2. Alavanca e relógio abrem para sempre; placas seguram só enquanto alguém pisa (todas as placas do canal ao mesmo tempo).
+
+Outros símbolos: `c` caixa de ferro, `h` relógio-cadeado, `m`/`M` plataformas móveis, `v` lâmina, `=`/`|` trilhos, `~` brasa.
+
+Para conferir os mapas sem abrir a Unity: `python3 tools/check-levels.py`.

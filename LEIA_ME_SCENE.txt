@@ -1,24 +1,19 @@
-FASES COLOCADAS NA HIERARCHY
+FASES NA HIERARCHY
 
-Ao abrir o projeto, o Unity cria as fases que ainda não existem e coloca Fase 1, Fase 2, Fase 3 e Fase 4 dentro de Níveis, sem precisar dar Play. Fase 3 é o prefab que você ajustou e não é recriada.
+As fases vêm sempre do texto em Assets/Scripts/Level/LevelData.cs.
 
-Para mexer: na Hierarchy, ative a fase (as outras começam desligadas), selecione o objeto e aperte F. Salve a cena (Ctrl+S). Se quiser que o jogo use o ajuste para sempre, no objeto da fase use Overrides > Apply All, ou edite o prefab em Assets/Resources/Levels.
+Ao abrir o projeto (e depois de cada recompilação ou ao sair do Play), aparece na Hierarchy o objeto
+"Níveis (gerados do LevelData)", com as seis fases. Só uma fica ativa. Ele é uma prévia: não é salvo
+na cena e some antes do Play.
 
-Menu: Eco do Tempo > Colocar fases na Hierarchy, se a lista não aparecer.
+Trocar a fase ou a era mostrada: menu Eco do Tempo > Visualizar fase na Scene.
+Se a lista não aparecer: menu Eco do Tempo > Recriar fases na Hierarchy.
 
-CORREÇÃO — VISUALIZAÇÃO NA SCENE E HIERARCHY
-
-Causa confirmada: GameManager.Awake começa no estado Title. A fase só é criada em LoadLevel, depois da confirmação e da introdução. LevelBuilder já cria GameObjects reais; não é desenho direto sem objetos.
-
-INSTALAÇÃO
-1. Pare o Play.
-2. Espere o Unity recompilar.
-3. Menu superior: Eco do Tempo > Visualizar fase na Scene.
-4. Escolha fase, era e se deseja ver as árvores após plantio. Clique Gerar / atualizar prévia.
-5. Expanda PRÉVIA na Hierarchy. A Scene será enquadrada em 2D; selecione Lia ou um bloco e pressione F para aproximar.
-
-A prévia é temporária: não é salva na cena, desaparece antes do Play e ao recompilar. Para alterar o mapa de verdade, edite LevelData.cs e gere novamente. Nesta versão, gerar a prévia depois de importar nova arte usa os caches já existentes do projeto; se uma alteração não aparecer, recompile ou reinicie o editor.
+O objeto antigo "Níveis" (com prefabs) é removido sozinho. Salve a cena (Ctrl+S) quando a Console avisar.
+O prefab ajustado da antiga fase 3 está guardado em Legacy/Level3_ajustado.prefab.
 
 DURANTE O PLAY
-O jogo inicia no título. Na aba Game, pressione a tecla de confirmar indicada pelo jogo e avance a introdução: Level 1 aparecerá na Hierarchy.
-Para pular a introdução, selecione EcoDoTempo e abra o menu de três pontos do componente GameManager (ou botão direito no cabeçalho). Debug > Abrir fase 1/2/3 sem introdução. A fase real será criada e ficará visível na Hierarchy. Os atalhos reiniciam a fase selecionada e limpam as notas coletadas.
+Na tela de título, as teclas 1 a 6 abrem uma fase direto. Ou selecione EcoDoTempo, menu ⋮ do componente
+GameManager > Debug > Abrir fase N sem introdução.
+
+Passo a passo completo e roteiro de teste: GUIA_UNITY.md.

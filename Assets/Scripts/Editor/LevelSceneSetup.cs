@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -7,108 +6,130 @@ using UnityEngine.SceneManagement;
 
 namespace EcoDoTempo
 {
-    // Puts every phase in the Hierarchy as a real object, without entering Play.
+    // Shows every phase in the Hierarchy without Play, built straight from LevelData.
+    // It is a snapshot: never saved, rebuilt after every recompile and after leaving Play.
+    // To change a phase for real, edit its map in LevelData.cs.
     [InitializeOnLoad]
     public static class LevelSceneSetup
     {
-        const string ScenePath = "Assets/Scenes/EcoDoTempo.unity";
+        public const string RootName = "Níveis (gerados do LevelData)";
+
+        static int shownLevel;
+        static Era shownEra = Era.Past;
+        static bool shownPlanted;
 
         static LevelSceneSetup()
         {
             EditorApplication.delayCall += Ensure;
+            EditorApplication.playModeStateChanged += state =>
+            {
+                if (state == PlayModeStateChange.EnteredEditMode) EditorApplication.delayCall += Ensure;
+            };
         }
 
-        [MenuItem("Eco do Tempo/Colocar fases na Hierarchy")]
+        [MenuItem("Eco do Tempo/Recriar fases na Hierarchy")]
+        static void RebuildFromMenu() => Rebuild(shownLevel, shownEra, shownPlanted, frame: true);
+
         public static void Ensure()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             if (PrefabStageUtility.GetCurrentPrefabStage() != null) return;
-
-            Directory.CreateDirectory("Assets/Resources/Levels");
-            Directory.CreateDirectory("Assets/Scenes");
-            BuildMissingPrefabs();
-            EnsureHierarchy();
+            RemoveLegacyLevels();
+            if (FindRoot() != null) return;
+            Rebuild(shownLevel, shownEra, shownPlanted, frame: false);
         }
 
-        static void BuildMissingPrefabs()
+        public static void Rebuild(int levelIndex, Era era, bool planted, bool frame)
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+            shownLevel = Mathf.Clamp(levelIndex, 0, LevelData.Levels.Length - 1);
+            shownEra = era;
+            shownPlanted = planted;
+
+            PreviewLifecycle.Clear();
+            var root = new GameObject(RootName);
+            root.AddComponent<EditorPreviewMarker>();
+            Vector2Int framed = new Vector2Int(30, 10);
             for (int i = 0; i < LevelData.Levels.Length; i++)
             {
-                string path = "Assets/Resources/Levels/Level" + (i + 1) + ".prefab";
-                if (AssetDatabase.LoadAssetAtPath<GameObject>(path) != null) continue;
-
                 var level = LevelData.Levels[i];
-                var root = new GameObject("Fase " + (i + 1));
+                var holder = new GameObject($"Fase {i + 1} — {level.Name}");
+                holder.transform.SetParent(root.transform, false);
                 try
                 {
-                    var result = LevelBuilder.Build(level, root.transform);
-                    LevelBackground.Create(root.transform, level.Background, result.Size, result.FloorTopY);
-                    PlayerController.Create(result.Spawn, root.transform);
-                    foreach (var obj in root.GetComponentsInChildren<TimeObject>(true))
-                        obj.Apply(Era.Past);
-                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                    var result = LevelBuilder.Build(level, holder.transform);
+                    var background = LevelBackground.Create(holder.transform, level.Background, result.Size, result.FloorTopY);
+                    background?.Apply(era);
+                    PlayerController.Create(result.Spawn, holder.transform);
+                    foreach (var obj in holder.GetComponentsInChildren<TimeObject>(true))
+                    {
+                        if (planted && obj.ForceHidden) obj.ForceHidden = false;
+                        obj.Apply(era);
+                    }
+                    if (i == shownLevel) framed = result.Size;
                 }
-                finally
+                catch (System.Exception ex)
                 {
-                    Object.DestroyImmediate(root);
+                    Debug.LogError($"[Eco do Tempo] A fase {i + 1} não foi montada. Confira o mapa em LevelData.cs.");
+                    Debug.LogException(ex);
                 }
+                holder.SetActive(i == shownLevel);
             }
-            AssetDatabase.SaveAssets();
+
+            Freeze(root);
+            EditorApplication.RepaintHierarchyWindow();
+            if (!frame) return;
+
+            Selection.activeGameObject = root.transform.GetChild(shownLevel).gameObject;
+            var view = SceneView.lastActiveSceneView;
+            if (view == null) return;
+            view.in2DMode = true;
+            view.Frame(new Bounds(new Vector3((framed.x - 1) * 0.5f, (framed.y - 1) * 0.5f, 0f),
+                new Vector3(framed.x + 2f, framed.y + 2f, 1f)), false);
+            SceneView.RepaintAll();
         }
 
-        static void EnsureHierarchy()
+        // Visual snapshot only: no gameplay scripts, no physics, nothing saved.
+        static void Freeze(GameObject root)
         {
-            var scene = SceneManager.GetActiveScene();
-            var catalog = Object.FindAnyObjectByType<LevelCatalog>();
-            if (catalog != null && catalog.Levels != null && catalog.Levels.Length == LevelData.Levels.Length)
+            foreach (var behaviour in root.GetComponentsInChildren<MonoBehaviour>(true))
+                if (!(behaviour is EditorPreviewMarker)) Object.DestroyImmediate(behaviour);
+            foreach (var body in root.GetComponentsInChildren<Rigidbody2D>(true)) body.simulated = false;
+            foreach (var collider in root.GetComponentsInChildren<Collider2D>(true)) collider.enabled = false;
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                t.gameObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+        }
+
+        static GameObject FindRoot()
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
             {
-                bool complete = true;
-                foreach (var level in catalog.Levels)
-                    if (level == null) complete = false;
-                if (complete) return;
+                var scene = SceneManager.GetSceneAt(i);
+                if (!scene.isLoaded) continue;
+                foreach (var go in scene.GetRootGameObjects())
+                    if (go.name == RootName && go.GetComponent<EditorPreviewMarker>() != null) return go;
             }
+            return null;
+        }
 
-            var parent = new GameObject("Níveis");
-            catalog = parent.AddComponent<LevelCatalog>();
-            catalog.Levels = new GameObject[LevelData.Levels.Length];
-            for (int i = 0; i < catalog.Levels.Length; i++)
+        // Earlier versions saved prefab copies of the levels in the scene ("Níveis").
+        // The game no longer reads them, so they would only show an outdated map.
+        static void RemoveLegacyLevels()
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
             {
-                string path = "Assets/Resources/Levels/Level" + (i + 1) + ".prefab";
-                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (prefab == null) continue;
-                var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
-                instance.name = "Fase " + (i + 1);
-                instance.transform.SetParent(parent.transform, false);
-                instance.SetActive(i == 0);
-                catalog.Levels[i] = instance;
-            }
-
-            if (Object.FindAnyObjectByType<GameManager>() == null)
-                new GameObject("EcoDoTempo").AddComponent<GameManager>();
-
-            var view = SceneView.lastActiveSceneView;
-            if (view != null)
-            {
-                view.in2DMode = true;
-                view.Frame(new Bounds(new Vector3(20f, 6f, 0f), new Vector3(40f, 16f, 1f)), false);
-            }
-
-            if (string.IsNullOrEmpty(scene.path))
-                EditorSceneManager.SaveScene(scene, ScenePath);
-            else
+                var scene = SceneManager.GetSceneAt(i);
+                if (!scene.isLoaded) continue;
+                bool removed = false;
+                foreach (var go in scene.GetRootGameObjects())
+                {
+                    if (go.GetComponent<LevelCatalog>() == null) continue;
+                    Object.DestroyImmediate(go);
+                    removed = true;
+                }
+                if (!removed) continue;
                 EditorSceneManager.MarkSceneDirty(scene);
-
-            var listed = EditorBuildSettings.scenes;
-            bool known = false;
-            string saved = string.IsNullOrEmpty(scene.path) ? ScenePath : scene.path;
-            for (int i = 0; i < listed.Length; i++)
-                if (listed[i].path == saved) known = true;
-            if (!known)
-            {
-                var next = new EditorBuildSettingsScene[listed.Length + 1];
-                listed.CopyTo(next, 0);
-                next[listed.Length] = new EditorBuildSettingsScene(saved, true);
-                EditorBuildSettings.scenes = next;
+                Debug.Log("[Eco do Tempo] Removi o objeto antigo \"Níveis\" da cena (as fases agora vêm do LevelData). Salve a cena com Ctrl+S.");
             }
         }
     }
