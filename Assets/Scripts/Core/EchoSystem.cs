@@ -82,6 +82,7 @@ namespace EcoDoTempo
                 PlayerController.BodyColliderSize);
             frames.Clear();
             gm.Synth.PlayRewind();
+            gm.Flash(new Color(0.55f, 0.92f, 1f, 0.35f));
             gm.ShowMessage("O tempo voltou. Seu eco repete o que você fez.", 2.5f);
         }
 

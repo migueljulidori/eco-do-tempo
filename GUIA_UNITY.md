@@ -35,7 +35,7 @@ git pull origin claude/hopeful-goldberg-hrhgt2
 
 Aperte **Play** em qualquer cena. Na tela de título:
 
-- **Enter** começa do início.
+- **Enter** começa do início, ou **continua** da última fase alcançada (o progresso é salvo sozinho; **N** começa um jogo novo).
 - **1 a 6** abrem uma fase direto (só no editor ou em build de desenvolvimento).
 - Também dá pelo Inspector: selecione `EcoDoTempo` durante o Play, menu ⋮ do componente **GameManager** → *Debug > Abrir fase N*.
 
@@ -50,6 +50,7 @@ Aperte **Play** em qualquer cena. Na tela de título:
 | **F** | **Eco**: grava seus passos; F de novo volta no tempo e deixa um eco repetindo tudo |
 | **C** | **Fermata**: segura o tempo por 3 s (C de novo solta) |
 | R | reiniciar a fase |
+| Esc / P | pausar (R reinicia, M volta ao título) |
 | Enter | avançar textos |
 
 ## 4. As regras do tempo (o que o jogador aprende)

@@ -40,22 +40,39 @@ namespace EcoDoTempo
 
             switch (gm.State)
             {
-                case GameState.Title: DrawTitle(); break;
+                case GameState.Title: DrawTitle(gm); break;
                 case GameState.Story: DrawStory(gm); break;
                 case GameState.Playing: DrawHud(gm); break;
                 case GameState.Inspecting: DrawHud(gm); DrawInspect(gm); break;
+                case GameState.Paused: DrawHud(gm); DrawPause(); break;
                 case GameState.LevelComplete: DrawHud(gm); DrawLevelComplete(gm); break;
                 case GameState.Ending: DrawEnding(gm); break;
             }
+
+            if (gm.FlashAlpha > 0f)
+            {
+                var c = gm.FlashColor;
+                c.a = gm.FlashAlpha;
+                Fill(new Rect(0, 0, width, VirtualHeight), c);
+            }
         }
 
-        void DrawTitle()
+        void DrawTitle(GameManager gm)
         {
             Fill(new Rect(0, 0, width, VirtualHeight), new Color(0, 0, 0, 0.6f));
             float pulse = 0.6f + 0.4f * Mathf.Sin(Time.time * 2f);
             Label(new Rect(0, 200, width, 100), "ECO DO TEMPO", title, Color.Lerp(Palette.PastBlock, Palette.FutureBlock, Mathf.PingPong(Time.time * 0.3f, 1f)));
             Label(new Rect(0, 300, width, 40), "Um quebra-cabeça entre passado e futuro", subtitle, Color.white);
-            Label(new Rect(0, 480, width, 40), "Pressione ENTER para começar", body, new Color(1, 1, 1, pulse));
+            if (gm.HasSave)
+            {
+                Label(new Rect(0, 470, width, 40), $"ENTER para continuar (Fase {gm.SavedLevel + 1}: {LevelData.Levels[gm.SavedLevel].Name})",
+                    body, new Color(1, 1, 1, pulse));
+                Label(new Rect(0, 515, width, 30), "N para começar um jogo novo", center, new Color(1, 1, 1, 0.7f));
+            }
+            else
+            {
+                Label(new Rect(0, 480, width, 40), "Pressione ENTER para começar", body, new Color(1, 1, 1, pulse));
+            }
             if (GameManager.LevelShortcutsEnabled)
                 Label(new Rect(0, 640, width, 30), $"Teste: teclas 1–{LevelData.Levels.Length} abrem uma fase direto", center,
                     new Color(1, 1, 1, 0.45f));
@@ -130,7 +147,7 @@ namespace EcoDoTempo
             if (gm.EraSwitchByHand) text += "   Q era";
             if (gm.HasPower(Power.Echo)) text += "   F eco";
             if (gm.HasPower(Power.Fermata)) text += "   C fermata";
-            text += "   R reiniciar";
+            text += "   R reiniciar   ESC pausa";
             if (gm.Level.AutoSwitchInterval > 0f) text += "   (Q desativado)";
             return text;
         }
@@ -169,6 +186,15 @@ namespace EcoDoTempo
                 var color = gm.CollectedNotes.Contains(i) ? Palette.Fragment : new Color(1, 1, 1, 0.15f);
                 Fill(new Rect(x + i * (size + gap), 38, size, size), color);
             }
+        }
+
+        void DrawPause()
+        {
+            Fill(new Rect(0, 0, width, VirtualHeight), new Color(0, 0, 0, 0.6f));
+            Label(new Rect(0, 230, width, 60), "PAUSADO", heading, Color.white);
+            Label(new Rect(0, 320, width, 32), "ESC ou ENTER   continuar", body, Color.white);
+            Label(new Rect(0, 362, width, 32), "R   reiniciar a fase", body, new Color(1, 1, 1, 0.85f));
+            Label(new Rect(0, 404, width, 32), "M   voltar ao título (o progresso fica salvo)", body, new Color(1, 1, 1, 0.85f));
         }
 
         void DrawInspect(GameManager gm)

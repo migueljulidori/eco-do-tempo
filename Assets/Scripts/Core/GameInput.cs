@@ -23,6 +23,9 @@ namespace EcoDoTempo
         public static bool InteractPressed => Down(KeyCode.E);
         public static bool ConfirmPressed => Down(KeyCode.Return, KeyCode.KeypadEnter);
         public static bool RestartPressed => Down(KeyCode.R);
+        public static bool PausePressed => Down(KeyCode.Escape, KeyCode.P);
+        public static bool MenuPressed => Down(KeyCode.M);
+        public static bool NewGamePressed => Down(KeyCode.N);
 
         // Number row 1..9 → 0..8, or -1. Used by the level shortcut on the title screen.
         public static int NumberPressed
@@ -49,6 +52,9 @@ namespace EcoDoTempo
         public static bool InteractPressed => Down(Key.E);
         public static bool ConfirmPressed => Down(Key.Enter, Key.NumpadEnter);
         public static bool RestartPressed => Down(Key.R);
+        public static bool PausePressed => Down(Key.Escape, Key.P);
+        public static bool MenuPressed => Down(Key.M);
+        public static bool NewGamePressed => Down(Key.N);
 
         public static int NumberPressed
         {

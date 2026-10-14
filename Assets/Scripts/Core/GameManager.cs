@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace EcoDoTempo
 {
-    public enum GameState { Title, Story, Playing, Inspecting, LevelComplete, Ending }
+    public enum GameState { Title, Story, Playing, Inspecting, Paused, LevelComplete, Ending }
 
     public class GameManager : MonoBehaviour
     {
@@ -40,6 +40,14 @@ namespace EcoDoTempo
         public float FermataLeft => Mathf.Clamp01(fermataTimer / FermataSeconds);
         public bool FermataReady => fermataTimer <= 0f && fermataCooldown <= 0f;
 
+        // Short full-screen tint: era switch, rewind, death.
+        public Color FlashColor { get; private set; }
+        public float FlashAlpha => Mathf.Clamp01((flashUntil - Time.unscaledTime) / FlashSeconds) * FlashColor.a;
+
+        // Saved progress: the level the player last reached and the notes held when it began.
+        public int SavedLevel => PlayerPrefs.GetInt(SaveLevelKey, 0);
+        public bool HasSave => SavedLevel > 0 && SavedLevel < LevelData.Levels.Length;
+
         public bool HasPower(Power power) => (Level.Powers & power) != 0;
         public bool EraSwitchByHand => HasPower(Power.Era) && Level.AutoSwitchInterval <= 0f;
 
@@ -59,10 +67,16 @@ namespace EcoDoTempo
         float fermataTimer;
         float fermataCooldown;
         int stateChangedFrame;
+        float flashUntil;
+
+        const float FlashSeconds = 0.35f;
+        const string SaveLevelKey = "eco.level";
+        const string SaveNotesKey = "eco.notes";
 
         void Awake()
         {
             Instance = this;
+            Time.timeScale = 1f;
             Synth = gameObject.AddComponent<ToneSynth>();
             Echo = gameObject.AddComponent<EchoSystem>();
             gameObject.AddComponent<GameUI>();
@@ -133,8 +147,13 @@ namespace EcoDoTempo
             switch (State)
             {
                 case GameState.Title:
-                    if (GameInput.ConfirmPressed)
+                    if (GameInput.ConfirmPressed && HasSave)
                     {
+                        ContinueSavedGame();
+                    }
+                    else if (GameInput.ConfirmPressed || (GameInput.NewGamePressed && HasSave))
+                    {
+                        ClearSave();
                         CollectedNotes.Clear();
                         ShowStory(LevelData.Intro, () => LoadLevel(0));
                     }
@@ -161,6 +180,22 @@ namespace EcoDoTempo
                     if (GameInput.ConfirmPressed || GameInput.InteractPressed) SetState(GameState.Playing);
                     break;
 
+                case GameState.Paused:
+                    if (GameInput.PausePressed || GameInput.ConfirmPressed) Resume();
+                    else if (GameInput.RestartPressed)
+                    {
+                        Time.timeScale = 1f;
+                        LoadLevel(LevelIndex, showIntro: false);
+                    }
+                    else if (GameInput.MenuPressed)
+                    {
+                        Time.timeScale = 1f;
+                        ClearLevel();
+                        cam.backgroundColor = Palette.Background(Era.Past);
+                        SetState(GameState.Title);
+                    }
+                    break;
+
                 case GameState.LevelComplete:
                     if (GameInput.ConfirmPressed) NextLevel();
                     break;
@@ -168,6 +203,7 @@ namespace EcoDoTempo
                 case GameState.Ending:
                     if (GameInput.ConfirmPressed)
                     {
+                        ClearSave();
                         ClearLevel();
                         cam.backgroundColor = Palette.Background(Era.Past);
                         SetState(GameState.Title);
@@ -178,6 +214,13 @@ namespace EcoDoTempo
 
         void UpdatePlaying()
         {
+            if (GameInput.PausePressed)
+            {
+                Time.timeScale = 0f;
+                SetState(GameState.Paused);
+                return;
+            }
+
             if (GameInput.RestartPressed)
             {
                 LoadLevel(LevelIndex, showIntro: false);
@@ -241,6 +284,42 @@ namespace EcoDoTempo
             Synth.PlayNote(392f, 0.25f, 0.3f);
         }
 
+        void Resume()
+        {
+            Time.timeScale = 1f;
+            SetState(GameState.Playing);
+        }
+
+        public void Flash(Color color)
+        {
+            FlashColor = color;
+            flashUntil = Time.unscaledTime + FlashSeconds;
+        }
+
+        // ---------- Save ----------
+
+        void SaveProgress()
+        {
+            PlayerPrefs.SetInt(SaveLevelKey, LevelIndex);
+            PlayerPrefs.SetString(SaveNotesKey, string.Join(",", notesAtLevelStart));
+            PlayerPrefs.Save();
+        }
+
+        void ContinueSavedGame()
+        {
+            CollectedNotes.Clear();
+            foreach (var part in PlayerPrefs.GetString(SaveNotesKey, "").Split(','))
+                if (int.TryParse(part, out int note)) CollectedNotes.Add(note);
+            LoadLevel(SavedLevel);
+        }
+
+        static void ClearSave()
+        {
+            PlayerPrefs.DeleteKey(SaveLevelKey);
+            PlayerPrefs.DeleteKey(SaveNotesKey);
+            PlayerPrefs.Save();
+        }
+
         // ---------- Story ----------
 
         public void ShowStory(string[] pages, Action onDone)
@@ -263,6 +342,7 @@ namespace EcoDoTempo
             {
                 notesAtLevelStart.Clear();
                 notesAtLevelStart.UnionWith(CollectedNotes);
+                SaveProgress();
             }
             else
             {
@@ -276,6 +356,7 @@ namespace EcoDoTempo
             levelSize = result.Size;
             FragmentsTotal = result.FragmentCount;
 
+            CameraFollow.FitToLevel(cam, levelSize.x);
             levelBackground = LevelBackground.Create(levelRoot.transform, Level.Background, levelSize, result.FloorTopY);
             Player = PlayerController.Create(result.Spawn, levelRoot.transform);
             camFollow.SetTarget(Player.transform, levelSize, result.FloorTopY);
@@ -356,6 +437,7 @@ namespace EcoDoTempo
             CurrentEra = target;
             ApplyEra();
             Synth.PlaySweep(target);
+            Flash(target == Era.Past ? new Color(1f, 0.75f, 0.4f, 0.22f) : new Color(0.45f, 0.85f, 1f, 0.22f));
             return true;
         }
 
@@ -428,6 +510,7 @@ namespace EcoDoTempo
         public void OnPlayerDied()
         {
             Synth.PlayBlocked();
+            Flash(new Color(0.8f, 0.1f, 0.1f, 0.45f));
             Echo.Cancel();
             if (fermataTimer > 0f) EndFermata();
             CurrentEra = Level.StartEra;
