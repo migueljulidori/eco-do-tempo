@@ -23,7 +23,7 @@ namespace EcoDoTempo
         float coyoteTimer;
         float jumpBufferTimer;
         readonly List<Collider2D> hits = new List<Collider2D>();
-        static readonly ContactFilter2D AnyCollider = new ContactFilter2D().NoFilter();
+        static readonly ContactFilter2D AnyCollider = ContactFilter2D.noFilter;
 
         public IInteractable Nearby { get; private set; }
 

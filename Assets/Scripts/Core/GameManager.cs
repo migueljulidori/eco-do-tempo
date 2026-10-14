@@ -55,7 +55,7 @@ namespace EcoDoTempo
         // The placed levels stay in the Hierarchy for editing. Play uses a fresh copy.
         static void HideAuthoringLevels()
         {
-            var catalogs = UnityEngine.Object.FindObjectsByType<LevelCatalog>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var catalogs = UnityEngine.Object.FindObjectsByType<LevelCatalog>(FindObjectsInactive.Include);
             foreach (var catalog in catalogs)
             {
                 if (catalog.Levels == null) continue;
