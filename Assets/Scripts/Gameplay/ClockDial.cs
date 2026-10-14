@@ -49,6 +49,17 @@ namespace EcoDoTempo
             col.isTrigger = true;
             col.size = Vector2.one;
             TimeBodies.AddChannelBadge(go, pos + Vector2.up * (FaceSize * 0.5f + 0.25f), dial.channel);
+
+            // Optional drawn face without hands (Props/clock_face, Props/clock_face_future).
+            // The game keeps drawing the hand on top so it can turn.
+            if (ArtCatalog.TryApply(go, "Props/clock_face", Vector2.one * FaceSize))
+            {
+                ArtCatalog.SetEraArt(go, "Props/clock_face",
+                    ArtCatalog.FirstExisting("Props/clock_face_future", "Props/clock_face"), Vector2.one * FaceSize);
+                rim.SetActive(false);
+                foreach (Transform child in go.transform)
+                    if (child.name == "Marca") child.gameObject.SetActive(false);
+            }
             TimeObject.Add(go, EraPresence.Both, Palette.ClockFacePast, Palette.ClockFaceFuture, solid: false);
             return dial;
         }

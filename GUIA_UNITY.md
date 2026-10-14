@@ -144,6 +144,8 @@ Ele aponta linhas de tamanhos diferentes, fragmentos faltando, comportas sem ala
 
 ## 7. Arte nova (opcional)
 
+Prompts prontos para o ChatGPT e o script que ajusta as imagens: **[PROMPTS_ARTE.md](PROMPTS_ARTE.md)**.
+
 Tudo funciona com formas simples. Se você desenhar estes PNGs, o jogo os usa sozinho (mesmas configurações dos outros: Sprite, Point, Compression None, PPU 32):
 
 | Arquivo | O quê | Tamanho |

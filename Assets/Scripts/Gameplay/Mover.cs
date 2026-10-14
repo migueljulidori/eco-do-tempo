@@ -79,8 +79,8 @@ namespace EcoDoTempo
 
             var box = go.AddComponent<BoxCollider2D>();
             box.size = mover.size;
-            string pastArt = ArtCatalog.FirstExisting("Tiles/block_metal_past", "Tiles/block_past");
-            string futureArt = ArtCatalog.FirstExisting("Tiles/block_metal_future", "Tiles/block_future");
+            string pastArt = ArtCatalog.FirstExisting("Tiles/platform_past", "Tiles/block_metal_past", "Tiles/block_past");
+            string futureArt = ArtCatalog.FirstExisting("Tiles/platform_future", "Tiles/block_metal_future", "Tiles/block_future");
             for (int i = 0; i < cells; i++)
             {
                 var cellPos = startCenter + Vector2.right * (i - (cells - 1) * 0.5f);

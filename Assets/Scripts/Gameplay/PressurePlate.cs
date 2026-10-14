@@ -11,6 +11,8 @@ namespace EcoDoTempo
         Transform pad;
         SpriteRenderer padRenderer;
         float padRestY;
+        [SerializeField] SpriteRenderer artRenderer;
+        [SerializeField] Vector2 artScale;
 
         public int Channel => channel;
         public bool Pressed { get; private set; }
@@ -35,6 +37,19 @@ namespace EcoDoTempo
             plate.padRenderer = padGo.GetComponent<SpriteRenderer>();
             plate.padRestY = 0.16f;
             TimeBodies.AddChannelBadge(frame, center + new Vector2(0f, 0.45f), channel);
+
+            // Optional drawn plate (Props/plate, Props/plate_pressed) replaces the two bars.
+            if (ArtCatalog.Has("Props/plate"))
+            {
+                var art = SpriteFactory.CreateObject("Arte", go.transform, center, Vector2.one, SpriteFactory.Square,
+                    Color.white, 4);
+                plate.artScale = new Vector2(cells, 1f);
+                ArtCatalog.TryApply(art, "Props/plate", plate.artScale);
+                ArtCatalog.SnapBottomTo(art, floorTop);
+                plate.artRenderer = art.GetComponent<SpriteRenderer>();
+                frame.GetComponent<SpriteRenderer>().enabled = false;
+                plate.padRenderer.enabled = false;
+            }
 
             if (GameManager.Instance != null) GameManager.Instance.RegisterPlate(plate);
             return plate;
@@ -62,7 +77,14 @@ namespace EcoDoTempo
             Pressed = pressed;
             if (pad != null)
                 pad.localPosition = new Vector3(pad.localPosition.x, pressed ? padRestY - 0.07f : padRestY, 0f);
-            if (padRenderer != null)
+            if (artRenderer != null)
+            {
+                string path = pressed && ArtCatalog.Has("Props/plate_pressed") ? "Props/plate_pressed" : "Props/plate";
+                ArtCatalog.TryApply(artRenderer.gameObject, path, artScale);
+                ArtCatalog.SnapBottomTo(artRenderer.gameObject, transform.position.y);
+                artRenderer.color = pressed ? Color.Lerp(Color.white, Palette.Channel(channel), 0.35f) : Color.white;
+            }
+            else if (padRenderer != null)
                 padRenderer.color = pressed ? Color.Lerp(Palette.Channel(channel), Color.white, 0.5f) : Palette.Channel(channel);
             gm.Synth.PlayNote(pressed ? 523f : 392f, 0.18f, 0.3f);
         }
