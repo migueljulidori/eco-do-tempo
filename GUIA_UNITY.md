@@ -102,7 +102,7 @@ Faça cada fase pelo caminho abaixo. Se algo não funcionar como descrito, anote
 4. Corra pelo caminho do futuro sobre os espinhos até a porta. Use C se o futuro estiver acabando.
 
 **Fase 6 — O Coração do Relógio** (tudo)
-1. No passado, empurre a caixa para dentro do porão (as tábuas sobre ele só existem no futuro). Ela cai na placa e segura a comporta da forja.
+1. No passado, empurre a caixa para dentro do porão (as tábuas sobre ele só existem no futuro). Ela cai na placa e segura a comporta da forja. Se você cair junto, os degraus para sair só existem no passado.
 2. Atravesse o porão pelo futuro.
 3. Elevador da torre: suba, espere a lâmina se afastar (ou congele com C) e pule para o topo. Troque para o passado e puxe a alavanca. Fragmento.
 4. Grave um eco indo até a placa antes da forja. Volte no tempo; o eco segura a comporta depois da forja.

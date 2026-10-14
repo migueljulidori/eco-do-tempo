@@ -73,7 +73,8 @@ namespace EcoDoTempo
             if (col == null) return false;
             var scale = transform.lossyScale;
             var center = (Vector2)transform.TransformPoint(col.offset);
-            var size = new Vector2(col.size.x * Mathf.Abs(scale.x), col.size.y * Mathf.Abs(scale.y)) * 0.95f;
+            // Only the gate's own cell: a crate parked next to it must not hold it open.
+            var size = new Vector2(0.8f, col.size.y * Mathf.Abs(scale.y) * 0.95f);
             return TimeBodies.AnyBodyIn(center, size);
         }
     }

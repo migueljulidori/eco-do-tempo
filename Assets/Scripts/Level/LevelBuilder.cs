@@ -426,9 +426,12 @@ namespace EcoDoTempo
             if (!ArtCatalog.Has(art)) ArtCatalog.TryApply(go, "Props/fragment", Vector2.one * 0.7f);
             if (ArtCatalog.Has(art) || ArtCatalog.Has("Props/fragment"))
                 ArtCatalog.SnapBottomTo(go, pos.y - 0.5f, lift: 0.35f);
+            // Pickup area: the map cell itself (0.4 world radius), wherever the art was snapped.
             var col = go.AddComponent<CircleCollider2D>();
             col.isTrigger = true;
-            col.radius = 0.4f;
+            var scale = go.transform.lossyScale;
+            col.radius = 0.4f / Mathf.Max(0.01f, Mathf.Abs(scale.x));
+            col.offset = new Vector2(0f, (pos.y - go.transform.position.y) / Mathf.Max(0.01f, Mathf.Abs(scale.y)));
             var frag = go.AddComponent<MelodyFragment>();
             frag.Order = order;
             frag.UseCustomArt = ArtCatalog.Has("Props/fragment") || ArtCatalog.Has(art);

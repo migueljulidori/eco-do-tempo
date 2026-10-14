@@ -195,11 +195,9 @@ namespace EcoDoTempo
             if (Level.AutoSwitchInterval > 0f)
             {
                 if (!TimeFrozen) autoSwitchTimer += Time.deltaTime;
-                if (autoSwitchTimer >= Level.AutoSwitchInterval)
-                {
+                // If Lia blocks the switch, keep trying every frame instead of waiting a full beat.
+                if (autoSwitchTimer >= Level.AutoSwitchInterval && TrySwitchEra(silentWhenBlocked: true))
                     autoSwitchTimer = 0f;
-                    TrySwitchEra(silentWhenBlocked: true);
-                }
                 if (GameInput.TimeSwitchPressed)
                     ShowMessage(HasPower(Power.Fermata)
                         ? "O tempo oscila sozinho aqui. Segure-o com a fermata (C)."

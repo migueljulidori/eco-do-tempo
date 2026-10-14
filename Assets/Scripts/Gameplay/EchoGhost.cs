@@ -26,6 +26,8 @@ namespace EcoDoTempo
         SpriteRenderer sr;
         Transform visual;
         readonly List<Collider2D> hits = new List<Collider2D>();
+        readonly List<RaycastHit2D> castHits = new List<RaycastHit2D>();
+        bool settled;
 
         public bool Replaying => frames != null && index < frames.Length;
 
@@ -81,8 +83,34 @@ namespace EcoDoTempo
                 return;
             }
 
-            // Settled: become a step, unless Lia is standing inside it right now.
-            if (col.isTrigger && !OverlapsPlayer()) col.isTrigger = false;
+            if (!settled)
+            {
+                settled = true;
+                SettleOnGround();
+            }
+            // Become a step once nothing solid with weight (Lia, a crate) stands inside it.
+            if (col.isTrigger && !OverlapsBody()) col.isTrigger = false;
+        }
+
+        // A recording can end mid-jump. The echo lands on whatever is below instead of hovering.
+        void SettleOnGround()
+        {
+            var solids = new ContactFilter2D();
+            solids.useTriggers = false;
+            int count = Physics2D.BoxCast(rb.position, col.size * 0.98f, 0f, Vector2.down, solids, castHits, 30f);
+            float best = float.MaxValue;
+            for (int i = 0; i < count; i++)
+            {
+                var hit = castHits[i];
+                if (hit.collider == col || hit.collider.GetComponentInParent<PlayerController>() != null) continue;
+                if (hit.distance < best) best = hit.distance;
+            }
+            if (best < float.MaxValue && best > 0.001f)
+            {
+                var landed = rb.position + Vector2.down * best;
+                rb.position = landed;
+                transform.position = landed;
+            }
         }
 
         void Update()
@@ -94,11 +122,15 @@ namespace EcoDoTempo
             sr.color = c;
         }
 
-        bool OverlapsPlayer()
+        bool OverlapsBody()
         {
             int count = Physics2D.OverlapBox(rb.position, col.size * 0.98f, 0f, TimeBodies.AllContacts, hits);
             for (int i = 0; i < count; i++)
-                if (hits[i].GetComponentInParent<PlayerController>() != null) return true;
+            {
+                if (hits[i] == col || hits[i].isTrigger) continue;
+                if (hits[i].GetComponentInParent<PlayerController>() != null
+                    || hits[i].GetComponentInParent<TimeCrate>() != null) return true;
+            }
             return false;
         }
 
@@ -110,7 +142,8 @@ namespace EcoDoTempo
             for (int i = 0; i < count; i++)
             {
                 var interactable = hits[i].GetComponent<IInteractable>();
-                if (interactable == null) continue;
+                // The echo pulls levers and plants seeds; reading notes or turning clocks stays with Lia.
+                if (!(interactable is Lever) && !(interactable is SeedSpot)) continue;
                 float d = Vector2.Distance(at, hits[i].transform.position);
                 if (d < bestDistance) { best = interactable; bestDistance = d; }
             }
