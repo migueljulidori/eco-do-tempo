@@ -24,6 +24,16 @@ namespace EcoDoTempo
             door.baseCell = pos;
         }
 
+        public void EnsureBound()
+        {
+            if (sr == null) sr = GetComponent<SpriteRenderer>();
+            useArt = sr != null && sr.sprite != null;
+            if (baseCell == Vector2.zero)
+                baseCell = (Vector2)transform.position + Vector2.up * 0.5f;
+        }
+
+        void Awake() => EnsureBound();
+
         void Update()
         {
             bool open = GameManager.Instance.AllFragmentsCollected;

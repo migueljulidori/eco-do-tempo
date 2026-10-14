@@ -24,6 +24,12 @@ namespace EcoDoTempo
             TimeObject.Add(go, EraPresence.Both, Palette.Lever, Palette.FutureLever, solid: false);
         }
 
+        public void BindChannel(int ch)
+        {
+            channel = ch;
+            cell = transform.position;
+        }
+
         public string Prompt(Era era) =>
             pulled ? "A alavanca já foi puxada" : "E: puxar alavanca";
 

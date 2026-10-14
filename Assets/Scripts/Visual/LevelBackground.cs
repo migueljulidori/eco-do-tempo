@@ -10,6 +10,19 @@ namespace EcoDoTempo
         string key;
         Vector2Int levelSize;
         float floorTopY;
+        bool preservePlacement;
+        Vector3 placedPosition;
+        Vector3 placedScale;
+
+        // A hand-placed backdrop keeps the transform saved in the level prefab.
+        public void UsePlacedSprite()
+        {
+            if (sr == null) sr = GetComponent<SpriteRenderer>();
+            key = "oficina";
+            preservePlacement = true;
+            placedPosition = transform.position;
+            placedScale = transform.localScale;
+        }
 
         // Lit lip of the painted floor on salao_past (fraction up from the bottom).
         const float PastLedgeFromBottom = 0.26f;
@@ -49,6 +62,12 @@ namespace EcoDoTempo
             sr.enabled = true;
             sr.sprite = sprite;
             sr.color = Color.white;
+            if (preservePlacement)
+            {
+                transform.position = placedPosition;
+                transform.localScale = placedScale;
+                return;
+            }
 
             float spriteW = Mathf.Max(0.01f, sprite.bounds.size.x);
             float spriteH = Mathf.Max(0.01f, sprite.bounds.size.y);

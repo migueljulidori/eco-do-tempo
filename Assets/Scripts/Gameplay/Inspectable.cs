@@ -22,6 +22,8 @@ namespace EcoDoTempo
             TimeObject.Add(go, EraPresence.Both, Palette.Inspectable, Palette.FutureInspectable, solid: false);
         }
 
+        public void Bind(InspectNote value) => note = value;
+
         public string Prompt(Era era) => "E: examinar";
 
         public void Interact(Era era) => GameManager.Instance.Inspect(era == Era.Past ? note.Past : note.Future);

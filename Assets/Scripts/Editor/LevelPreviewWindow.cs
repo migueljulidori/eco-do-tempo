@@ -41,10 +41,24 @@ namespace EcoDoTempo
                 root = new GameObject("PRÉVIA — " + LevelData.Levels[levelIndex].Name);
                 root.AddComponent<EditorPreviewMarker>();
                 var level = LevelData.Levels[levelIndex];
-                var result = LevelBuilder.Build(level, root.transform);
-                var background = LevelBackground.Create(root.transform, level.Background, result.Size, result.FloorTopY);
-                background?.Apply(era);
-                PlayerController.Create(result.Spawn, root.transform);
+                Vector2Int framed = level.Map.Length > 0
+                    ? new Vector2Int(level.Map[0].Length, level.Map.Length)
+                    : new Vector2Int(30, 10);
+                if (levelIndex == 2 && Level3Layout.Available)
+                {
+                    var placed = Object.Instantiate(Resources.Load<GameObject>(Level3Layout.ResourcePath));
+                    placed.name = "Level 3";
+                    placed.transform.SetParent(root.transform, false);
+                    framed = new Vector2Int(58, 16);
+                }
+                else
+                {
+                    var result = LevelBuilder.Build(level, root.transform);
+                    var background = LevelBackground.Create(root.transform, level.Background, result.Size, result.FloorTopY);
+                    background?.Apply(era);
+                    PlayerController.Create(result.Spawn, root.transform);
+                    framed = result.Size;
+                }
                 foreach (var obj in root.GetComponentsInChildren<TimeObject>(true))
                 {
                     if (planted && obj.ForceHidden) obj.ForceHidden = false;
@@ -61,8 +75,8 @@ namespace EcoDoTempo
                 var view = SceneView.lastActiveSceneView;
                 if (view == null) view = GetWindow<SceneView>();
                 view.in2DMode = true;
-                view.Frame(new Bounds(new Vector3((result.Size.x - 1) * 0.5f, (result.Size.y - 1) * 0.5f, 0f),
-                    new Vector3(result.Size.x + 2f, result.Size.y + 2f, 1f)), false);
+                view.Frame(new Bounds(new Vector3((framed.x - 1) * 0.5f, (framed.y - 1) * 0.5f, 0f),
+                    new Vector3(framed.x + 2f, framed.y + 2f, 1f)), false);
                 SceneView.RepaintAll();
                 EditorApplication.RepaintHierarchyWindow();
             }

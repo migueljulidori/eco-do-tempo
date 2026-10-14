@@ -91,6 +91,18 @@ namespace EcoDoTempo
             return player;
         }
 
+        void Awake() => EnsureBound();
+
+        // Prefab copies do not keep the private references assigned in Create.
+        public void EnsureBound()
+        {
+            if (rb == null) rb = GetComponent<Rigidbody2D>();
+            if (body == null) body = GetComponent<BoxCollider2D>();
+            if (visual == null && transform.childCount > 0) visual = transform.GetChild(0);
+            if (spriteAnim == null && visual != null) spriteAnim = visual.GetComponent<PlayerSpriteAnimator>();
+            if (spawn == Vector2.zero) spawn = transform.position;
+        }
+
         void LateUpdate()
         {
             if (visual == null || body == null) return;

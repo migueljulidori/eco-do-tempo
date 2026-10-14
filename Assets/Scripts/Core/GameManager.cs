@@ -194,15 +194,26 @@ namespace EcoDoTempo
                 CollectedNotes.UnionWith(notesAtLevelStart);
             }
 
-            levelRoot = new GameObject("Level " + (index + 1));
-            var result = LevelBuilder.Build(Level, levelRoot.transform);
-            levelSize = result.Size;
-            FragmentsTotal = result.FragmentCount;
             FragmentsCollected = 0;
+            if (index == 2 && Level3Layout.Available)
+            {
+                levelRoot = Level3Layout.Create(Level, out var player, out levelBackground,
+                    out var fragments, out levelSize, out var floorTop);
+                FragmentsTotal = fragments;
+                Player = player;
+                camFollow.SetTarget(Player.transform, levelSize, floorTop);
+            }
+            else
+            {
+                levelRoot = new GameObject("Level " + (index + 1));
+                var result = LevelBuilder.Build(Level, levelRoot.transform);
+                levelSize = result.Size;
+                FragmentsTotal = result.FragmentCount;
 
-            levelBackground = LevelBackground.Create(levelRoot.transform, Level.Background, levelSize, result.FloorTopY);
-            Player = PlayerController.Create(result.Spawn, levelRoot.transform);
-            camFollow.SetTarget(Player.transform, levelSize, result.FloorTopY);
+                levelBackground = LevelBackground.Create(levelRoot.transform, Level.Background, levelSize, result.FloorTopY);
+                Player = PlayerController.Create(result.Spawn, levelRoot.transform);
+                camFollow.SetTarget(Player.transform, levelSize, result.FloorTopY);
+            }
 
             CurrentEra = Level.StartEra;
             autoSwitchTimer = 0f;

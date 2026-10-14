@@ -38,6 +38,12 @@ namespace EcoDoTempo
             if (GameManager.Instance != null) GameManager.Instance.RegisterGate(gate);
         }
 
+        public void Bind(TimeObject obj, int ch)
+        {
+            timeObject = obj != null ? obj : GetComponent<TimeObject>();
+            channel = ch;
+        }
+
         public void Open() => timeObject.ForceIntangible = true;
     }
 }
