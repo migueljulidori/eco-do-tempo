@@ -126,32 +126,39 @@ namespace EcoDoTempo
                 Background = "oficina",
                 Intro = new[]
                 {
-                    "A madeira desta oficina só existe no passado. O metal, só no futuro. A pedra ficou nos dois.",
-                    "Fique sobre a tábua e troque de era: o que some sob os seus pés também é caminho.",
+                    "A oficina ocupa três andares: salão, porão e torreão. É o maior mecanismo da torre.",
+                    "Madeira no passado, metal no futuro, pedra nos dois. Cada lance de escada pertence a uma era.",
                 },
                 Notes = new[]
                 {
                     new InspectNote(
-                        "Bilhete na tábua: \"Quem trocar de era aqui em cima cai no porão. A porta de madeira ainda tranca o passado. A alavanca só gira nele.\"",
-                        "A tábua virou pó. Dá para entrar na sala, mas a alavanca enferrujou — e a passarela de metal até a saída só existe agora."),
+                        "Bilhete na tábua: \"Troque de era aqui em cima e o chão cede. No porão, suba pelo metal. No torreão, pare em cada patamar de pedra.\"",
+                        "A tábua virou pó. A alavanca do alto abre a forja. Outra, depois da porta podre, abre a saída. As duas só giram no passado."),
+                    new InspectNote(
+                        "Gravado no patamar: \"Pedra nos dois tempos. O degrau seguinte só existe numa era. Madeira, depois metal, depois madeira.\"",
+                        "Se o degrau à frente é só um eco, troque de era antes de pisar. Na passarela, espinhos esperam quem erra o tempo."),
                 },
-                // Três usos do tempo (madeira = passado, metal = futuro, pedra = os dois):
-                // 1) Em cima da tábua ppp, Q: ela some e Lia cai no porão. Fragmento 2.
-                // 2) A escada f sobe ao salão. A porta pp só existe no passado — entre no futuro.
-                // 3) Lá dentro, Q: pegue o 1 e puxe L. A comporta abre. A passarela ffff
-                //    só existe no futuro: Q de novo na pedra, pegue * e saia.
+                // Salão → queda na tábua → porão (f) → torreão em três lances
+                // (p, f, p) → alavanca L abre G → passarela f → porta p → alavanca A
+                // abre a → passarela final até * e D.
                 Map = new[]
                 {
-                    "...........................",
-                    "...........................",
-                    "...........#...............",
-                    "...........#.....pp...#....",
-                    "...........#.....pp...#....",
-                    ".@.i.......#.....pp1L.G..*D",
-                    "########ppp#...########ffff",
-                    ".......#...#..f............",
-                    ".......#.2...f.........^^^^",
-                    ".......########........####",
+                    "..........................................................",
+                    "...............................L1.........................",
+                    "...............................##.........................",
+                    "..............#...............p...........................",
+                    "..............#..............p............................",
+                    "..............#............##.............................",
+                    "..............#...........f...............................",
+                    "..............#..........f................................",
+                    "..............#........##.........#...........pp...#......",
+                    "..............#.......p...........#...........pp...#......",
+                    "..@.i.........#...i..p............G...........pp.A.a....*D",
+                    "###########ppp#...####################ffffff##########ffff",
+                    "..........#...#..f.#......................................",
+                    "..........#.2...f..#..................^^^^^^..........^^^^",
+                    "..........##########..................######..........####",
+                    "..........................................................",
                 },
             },
             new LevelDefinition
