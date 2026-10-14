@@ -1,0 +1,70 @@
+CONFIGURAÇÃO — FASE 3: A OFICINA
+
+Dois fundos, a fase inteira em cada arquivo. A câmera percorre a imagem. Não é uma sala só.
+
+oficina_past.png    | 2900×1154 | pivot Center | opaco | oficina quente, lâmpadas acesas
+oficina_future.png  | 2900×1154 | pivot Center | opaco | a mesma oficina, fria e enferrujada
+
+A linha do chão jogável fica a 300 px da borda de baixo (26% da altura). As duas imagens usam a MESMA composição, o mesmo enquadramento e essa mesma linha. Só mudam os materiais.
+
+Escala do desenho: 50 px = 1 bloco do jogo. A fase tem 58 colunas. A coluna 0 começa na borda esquerda.
+
+Não desenhar Lia, alavancas, comportas, porta de saída, espinhos, fragmentos, tábuas, escadas de metal nem degraus de madeira. Isso já entra como sprite por cima do fundo. Se o fundo também pintar essas coisas, elas duplicam e não batem no pulo.
+
+O que o fundo mostra é a parede do fundo, o vão e o alicerce. A faixa do chão é só um lábio de pedra. Máquinas, torre e forja ficam na parede, atrás desse lábio.
+
+PALETA
+Passado: #2A1810 #5A3A28 #8B5A2B #C4A574 #E6A64D, luz de âmbar nas janelas.
+Futuro: #0A101F #1A2438 #38506B #5A6F86 #A0B4C8, ferrugem #6E3A2A, um acento frio #4DE6FF só em frestas. Lâmpadas apagadas.
+
+MAPA DA ESQUERDA PARA A DIREITA
+
+0–10  (0–550 px)  SALÃO
+Parede de oficina de relojoeiro. Bancada, engrenagens, relógio pequeno, lamparinas. Chão contínuo no lábio. Lia começa perto de x=125. O diário fica perto de x=225. Nada de plataforma extra.
+
+11–13  (550–700 px)  BOCA DO PORÃO
+Buraco escuro no lábio. Não pintar tábuas. No passado, suportes de ferro vazios nas bordas do buraco. No futuro, os suportes quebrados. Abaixo da linha, o poço desce.
+
+14  (x=700–750)  PILAR
+Um pilastro de pedra estreito, uma coluna só, do alto da parede até dentro do porão. Não alargar: Lia passa rente nos dois lados.
+
+11–18, abaixo da linha  PORÃO
+Oficina baixa, visível no vão. Bigorna, caixotes, corrente. O piso do porão fica 150 px abaixo da linha do chão. Sem escada pintada.
+
+21–32, acima da linha  TORREÃO
+Poço vertical na parede, vazio. Três nichos de pedra recuados na parede, não plataformas que avancem para o caminho:
+- 150 px acima do chão
+- 300 px acima do chão
+- 450 px acima do chão
+A alavanca do jogo fica no nicho de cima, perto de x=1600. Não desenhar a alavanca.
+
+34  (x=1700)  COMPORTA DA FORJA
+Só o batente de pedra na parede. A grade é sprite.
+
+38–43  (1900–2200 px)  FOSSO DA FORJA
+Outro buraco no lábio, mais largo. Passado: brasa no fundo, 100 px abaixo da linha. Futuro: cinza fria. Sem passarela pintada. Os espinhos são sprite.
+
+46–47  (2300–2400 px)  PORTA PODRE
+Um umbral de madeira na parede. Passado: portal fechado só no desenho da parede, sem folhas que ocupem o chão. Futuro: o mesmo umbral, madeira comida, vão aberto. As folhas jogáveis são sprites.
+
+49  (x=2450)  SEGUNDA ALAVANCA
+Parede lisa de pedra com um encaixe vazio. Não desenhar a alavanca.
+
+51  (x=2550)  COMPORTA DA SAÍDA
+Outro batente, igual ao da forja, menor.
+
+52–53  (2600–2700 px)  LAJE
+Lábio de pedra contínuo. É onde se troca de era antes da saída.
+
+54–57  (2700–2900 px)  VÃO FINAL
+Buraco no lábio e, na borda direita, o arco da saída. A porta é sprite, encostada em x=2850. Sem passarela pintada.
+
+Abaixo de 0–10 e de todo trecho que não é buraco: alicerce de pedra, 300 px, opaco até a borda de baixo. Sem faixa marrom lisa e sem céu embaixo.
+
+PROMPT — PASSADO
+Pixel art, exact canvas 2900 by 1154, no text, no letters, no UI, no characters, no stretch, dark 1px outlines, nearest neighbor, opaque. Side-view clockmaker workshop, one long room, camera will scroll. A single stone lip runs along y=300 from the bottom. Above it, warm amber lamplight, brass gears, small clock, workbench on the left wall. At x=550 to 700 the lip breaks into a dark cellar mouth, iron brackets empty, cellar floor 150px below the lip, anvil and crates, no stairs. A narrow stone pilaster at x=725 from high on the wall down into the cellar. Center, x=1050 to 1650, a tall empty shaft with three recessed stone niches at 150, 300 and 450 px above the lip, no platforms sticking out. At x=1700 only a stone gate frame. At x=1900 to 2200 a wide forge pit, coals glowing 100px below the lip, no bridge. At x=2300 a wooden doorframe on the back wall, doors not blocking the floor. Empty lever socket at x=2450. Second stone gate frame at x=2550. Solid lip x=2600 to 2700. Final dark drop x=2700 to 2900 with an exit arch at the right edge. Foundation masonry fills everything below the lip except the three pits. Palette #2A1810 #5A3A28 #8B5A2B #C4A574 #E6A64D.
+
+PROMPT — FUTURO
+Same image, same pixels of layout, same lip at 300px from the bottom, same pits, niches, pilaster and arches. Change only age and light: lamps dead, glass broken, brass turned rust, coals become cold ash, cellar crates rotten, doorframe eaten through, blue-gray fog. Palette #0A101F #1A2438 #38506B #5A6F86 #A0B4C8, rust #6E3A2A, a few cold #4DE6FF cracks. No new platforms, no bridge, no stairs, no character, no text.
+
+Importação: Sprite (2D and UI), Single, Point, Compression None, mipmaps off, Wrap Clamp, Mesh Full Rect, pivot Center, PPU 128. Os dois arquivos com o mesmo pivot. Nomes: Assets/Resources/Backgrounds/oficina_past.png e oficina_future.png.
