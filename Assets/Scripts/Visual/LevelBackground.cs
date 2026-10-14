@@ -7,18 +7,17 @@ namespace EcoDoTempo
     public class LevelBackground : MonoBehaviour
     {
         SpriteRenderer sr;
-        string key;
-        Vector2Int levelSize;
-        float floorTopY;
+        [SerializeField] string key;
+        [SerializeField] Vector2Int levelSize;
+        [SerializeField] float floorTopY;
         bool preservePlacement;
         Vector3 placedPosition;
         Vector3 placedScale;
 
-        // A hand-placed backdrop keeps the transform saved in the level prefab.
+        // Keeps a hand-placed backdrop where it was saved. The era only swaps the sprite.
         public void UsePlacedSprite()
         {
             if (sr == null) sr = GetComponent<SpriteRenderer>();
-            key = "oficina";
             preservePlacement = true;
             placedPosition = transform.position;
             placedScale = transform.localScale;

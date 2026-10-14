@@ -44,10 +44,10 @@ namespace EcoDoTempo
                 Vector2Int framed = level.Map.Length > 0
                     ? new Vector2Int(level.Map[0].Length, level.Map.Length)
                     : new Vector2Int(30, 10);
-                if (levelIndex == 2 && Level3Layout.Available)
+                if (Level3Layout.HasPrefab(levelIndex))
                 {
-                    var placed = Object.Instantiate(Resources.Load<GameObject>(Level3Layout.ResourcePath));
-                    placed.name = "Level 3";
+                    var placed = Object.Instantiate(Resources.Load<GameObject>(Level3Layout.PathFor(levelIndex)));
+                    placed.name = "Fase " + (levelIndex + 1);
                     placed.transform.SetParent(root.transform, false);
                     framed = new Vector2Int(58, 16);
                 }

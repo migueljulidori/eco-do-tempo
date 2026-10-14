@@ -48,7 +48,20 @@ namespace EcoDoTempo
             Synth = gameObject.AddComponent<ToneSynth>();
             gameObject.AddComponent<GameUI>();
             SetupCamera();
+            HideAuthoringLevels();
             SetState(GameState.Title);
+        }
+
+        // The placed levels stay in the Hierarchy for editing. Play uses a fresh copy.
+        static void HideAuthoringLevels()
+        {
+            var catalogs = UnityEngine.Object.FindObjectsByType<LevelCatalog>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var catalog in catalogs)
+            {
+                if (catalog.Levels == null) continue;
+                foreach (var level in catalog.Levels)
+                    if (level != null) level.SetActive(false);
+            }
         }
 
         void OnDestroy()
@@ -195,9 +208,9 @@ namespace EcoDoTempo
             }
 
             FragmentsCollected = 0;
-            if (index == 2 && Level3Layout.Available)
+            if (Level3Layout.HasPrefab(index))
             {
-                levelRoot = Level3Layout.Create(Level, out var player, out levelBackground,
+                levelRoot = Level3Layout.Create(index, Level, out var player, out levelBackground,
                     out var fragments, out levelSize, out var floorTop);
                 FragmentsTotal = fragments;
                 Player = player;

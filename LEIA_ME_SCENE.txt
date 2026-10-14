@@ -1,3 +1,11 @@
+FASES COLOCADAS NA HIERARCHY
+
+Ao abrir o projeto, o Unity cria as fases que ainda não existem e coloca Fase 1, Fase 2, Fase 3 e Fase 4 dentro de Níveis, sem precisar dar Play. Fase 3 é o prefab que você ajustou e não é recriada.
+
+Para mexer: na Hierarchy, ative a fase (as outras começam desligadas), selecione o objeto e aperte F. Salve a cena (Ctrl+S). Se quiser que o jogo use o ajuste para sempre, no objeto da fase use Overrides > Apply All, ou edite o prefab em Assets/Resources/Levels.
+
+Menu: Eco do Tempo > Colocar fases na Hierarchy, se a lista não aparecer.
+
 CORREÇÃO — VISUALIZAÇÃO NA SCENE E HIERARCHY
 
 Causa confirmada: GameManager.Awake começa no estado Title. A fase só é criada em LoadLevel, depois da confirmação e da introdução. LevelBuilder já cria GameObjects reais; não é desenho direto sem objetos.

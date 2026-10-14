@@ -3,14 +3,19 @@ using UnityEngine;
 
 namespace EcoDoTempo
 {
-    // Phase 3 is the hand-placed prefab, not the ASCII map.
+    // A placed level prefab: background and objects live in the asset, not in the text map.
     public static class Level3Layout
     {
         public const string ResourcePath = "Levels/Level3";
 
         public static bool Available => Resources.Load<GameObject>(ResourcePath) != null;
 
+        public static string PathFor(int index) => "Levels/Level" + (index + 1);
+
+        public static bool HasPrefab(int index) => Resources.Load<GameObject>(PathFor(index)) != null;
+
         public static GameObject Create(
+            int index,
             LevelDefinition level,
             out PlayerController player,
             out LevelBackground background,
@@ -18,12 +23,12 @@ namespace EcoDoTempo
             out Vector2Int size,
             out float floorTop)
         {
-            var prefab = Resources.Load<GameObject>(ResourcePath);
+            var prefab = Resources.Load<GameObject>(PathFor(index));
             var root = Object.Instantiate(prefab);
-            root.name = "Level 3";
+            root.name = "Level " + (index + 1);
 
             player = root.GetComponentInChildren<PlayerController>(true);
-            player.EnsureBound();
+            if (player != null) player.EnsureBound();
 
             background = root.GetComponentInChildren<LevelBackground>(true);
             background?.UsePlacedSprite();
@@ -60,7 +65,8 @@ namespace EcoDoTempo
 
             fragments = root.GetComponentsInChildren<MelodyFragment>(true).Length;
             size = new Vector2Int(58, 16);
-            floorTop = player.transform.position.y - 0.45f;
+            var spawned = player != null ? (Vector2)player.transform.position : Vector2.zero;
+            floorTop = spawned.y - 0.45f;
             return root;
         }
     }
