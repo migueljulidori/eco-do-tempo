@@ -126,37 +126,35 @@ namespace EcoDoTempo
                 Background = "oficina",
                 Intro = new[]
                 {
-                    "A oficina ocupa três andares: salão, porão e torreão. É o maior mecanismo da torre.",
-                    "Madeira no passado, metal no futuro, pedra nos dois. Cada lance de escada pertence a uma era.",
+                    "A oficina é uma sala só. O poço, a forja e a saída estão abertos no chão.",
+                    "Madeira no passado, metal no futuro, pedra nos dois. O que você abre no passado continua aberto.",
                 },
                 Notes = new[]
                 {
                     new InspectNote(
-                        "Bilhete na tábua: \"Troque de era aqui em cima e o chão cede. No porão, suba pelo metal. No torreão, pare em cada patamar de pedra.\"",
-                        "A tábua virou pó. A alavanca do alto abre a forja. Outra, depois da porta podre, abre a saída. As duas só giram no passado."),
+                        "Bilhete na tábua: \"Troque de era aqui e caia no poço. A alavanca lá embaixo abre a forja, mas só gira no passado.\"",
+                        "A tábua sumiu. A escada de metal sobe do poço. A forja, à direita, é uma ponte deste tempo."),
                     new InspectNote(
-                        "Gravado no patamar: \"Pedra nos dois tempos. O degrau seguinte só existe numa era. Madeira, depois metal, depois madeira.\"",
-                        "Se o degrau à frente é só um eco, troque de era antes de pisar. Na passarela, espinhos esperam quem erra o tempo."),
+                        "Na parede: \"A porta de madeira ainda fecha o corredor. Atrás dela, a segunda alavanca abre o vão da saída.\"",
+                        "A porta apodreceu. O vão da saída só tem chão de metal agora. Quem pisa no vazio cai nos espinhos."),
                 },
-                // Alinhado ao fundo 2900×1154: lábio no pixel 664.
-                // Buraco da tábua nas colunas 14–16, pilar na 18, forja 38–43, saída 54–56.
+                // Fundo 2900×1154, lábio no pixel 664. 50 px = 1 coluna.
+                // Poço 14–17 (4 blocos, 7 de fundo). Forja 38–43 (6, brasas a 2).
+                // Porta pintada ~45. Vão da saída 54–55 (2).
                 Map = new[]
                 {
-                    "..................................#................#......",
-                    "................................L1#................#......",
-                    "................................###................#......",
-                    "..................#............p..#................#......",
-                    "..................#...........p...#................#......",
-                    "..................#.........##....#................#......",
-                    "..................#........f......#................#......",
-                    "..................#.......f.......#................#......",
-                    "..................#.....##........#...........pp...#......",
-                    "..................#....p..........#...........pp...#......",
-                    "..@.i.............#..ip...........G...........pp.A.a....*D",
-                    "##############ppp###.#################ffffff##########fff#",
-                    "............#.....#.f.....................................",
-                    "............#.2....f..................^^^^^^..........^^^.",
-                    "............##########................######..........###.",
+                    "..........................................................",
+                    ".....................................#.......pp......#....",
+                    ".............................................pp......###..",
+                    "..@.i.................i..............G.......pp..1A..a.*.D",
+                    "##############pppp####################ffffff##########ff##",
+                    ".............#...f#.......................................",
+                    ".............#..f.#...................^^^^^^..........^^..",
+                    ".............#...f#...................######..........##..",
+                    ".............#..f.#.......................................",
+                    ".............#...f#.......................................",
+                    ".............#2Lf.#.......................................",
+                    ".............######.......................................",
                     "..........................................................",
                 },
             },
