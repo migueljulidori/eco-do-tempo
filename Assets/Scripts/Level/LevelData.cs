@@ -126,36 +126,32 @@ namespace EcoDoTempo
                 Background = "oficina",
                 Intro = new[]
                 {
-                    "A oficina do avô tem duas comportas. Cada alavanca move só a sua — como as fechaduras da torre.",
-                    "Cruze as eras para achar o caminho. O que você muda no passado permanece no futuro.",
+                    "A madeira desta oficina só existe no passado. O metal, só no futuro. A pedra ficou nos dois.",
+                    "Fique sobre a tábua e troque de era: o que some sob os seus pés também é caminho.",
                 },
                 Notes = new[]
                 {
                     new InspectNote(
-                        "Diário de bancada: \"Comporta da forja = alavanca perto do fosso. Comporta do depósito = alavanca do mezanino. Nunca enferrujar.\"",
-                        "O diário virou pó. Só resta um desenho infantil: Lia e o avô diante de duas portas abertas."),
+                        "Bilhete na tábua: \"Quem trocar de era aqui em cima cai no porão. A porta de madeira ainda tranca o passado. A alavanca só gira nele.\"",
+                        "A tábua virou pó. Dá para entrar na sala, mas a alavanca enferrujou — e a passarela de metal até a saída só existe agora."),
                 },
-                // Puzzle box (hub → comporta 0 → mezanino → comporta 1 → saída):
-                // 1) Futuro: atravessar a ponte f sobre o fosso; pegar o fragmento 2.
-                // 2) Passado: puxar L (canal 0) → abre GGG.
-                // 3) Passado: subir os degraus p e pegar o fragmento 1.
-                // 4) Futuro: subir a escada f até o mezanino ####, trocar para o passado, puxar A.
-                // 5) Comporta aaa abre; pegar * e sair pela porta.
+                // Três usos do tempo (madeira = passado, metal = futuro, pedra = os dois):
+                // 1) Em cima da tábua ppp, Q: ela some e Lia cai no porão. Fragmento 2.
+                // 2) A escada f sobe ao salão. A porta pp só existe no passado — entre no futuro.
+                // 3) Lá dentro, Q: pegue o 1 e puxe L. A comporta abre. A passarela ffff
+                //    só existe no futuro: Q de novo na pedra, pegue * e saia.
                 Map = new[]
                 {
-                    "..........................................",
-                    "......................1....####...........",
-                    ".....................pp....#A.#...........",
-                    "..........2...........p....#ff#...........",
-                    ".........fff..........p.....ff............",
-                    "......................p....f.f............",
-                    "..................GGG.p...f...............",
-                    "....i.............GGG.p..f...aaa..........",
-                    "..@...............GGG...f....aaa.....*..D.",
-                    "............L..........f.....aaa..........",
-                    "######fffff###############################",
-                    "......^^^^^...............................",
-                    "......#####...............................",
+                    "...........................",
+                    "...........................",
+                    "...........#...............",
+                    "...........#.....pp...#....",
+                    "...........#.....pp...#....",
+                    ".@.i.......#.....pp1L.G..*D",
+                    "########ppp#...########ffff",
+                    ".......#...#..f............",
+                    ".......#.2...f.........^^^^",
+                    ".......########........####",
                 },
             },
             new LevelDefinition

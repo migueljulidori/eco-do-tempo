@@ -40,11 +40,16 @@ namespace EcoDoTempo
             float y;
             if (minY > maxY)
             {
-                // Level shorter than the view: pin the floor near the bottom so the
-                // painted under-floor masonry is cropped instead of forming a brown bar.
-                float pinned = floorTopY - UnderFloorVisible + halfH;
-                float centerY = (levelSize.y - 1) * 0.5f;
-                y = floorTopY > 0f ? pinned : centerY;
+                // Short level: rest the floor near the bottom of the screen so the
+                // painted masonry under it is cropped. If Lia drops into a pit or
+                // cellar, follow her down; the resting frame comes back when she climbs.
+                if (floorTopY > 0f)
+                {
+                    float pinned = floorTopY - UnderFloorVisible + halfH;
+                    float followDown = wanted.y + halfH - 2.2f;
+                    y = Mathf.Min(pinned, followDown);
+                }
+                else y = (levelSize.y - 1) * 0.5f;
             }
             else
             {
