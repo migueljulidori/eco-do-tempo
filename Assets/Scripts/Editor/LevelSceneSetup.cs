@@ -33,8 +33,10 @@ namespace EcoDoTempo
                 Directory.CreateDirectory("Assets/Scenes");
                 BuildMissingPrefabs();
                 RepairSavedPrefabs();
+                HidePaintedScenery();
                 EnsureHierarchy();
                 RepairOpenScene();
+                HidePaintedSceneryInOpenScene();
             }
             finally
             {
@@ -46,6 +48,8 @@ namespace EcoDoTempo
         {
             for (int i = 0; i < LevelData.Levels.Length; i++)
             {
+                // Level3.prefab is the hand-adjusted layout. Never rebuild it from the text map.
+                if (i == 2) continue;
                 string path = "Assets/Resources/Levels/Level" + (i + 1) + ".prefab";
                 if (AssetDatabase.LoadAssetAtPath<GameObject>(path) != null) continue;
 
@@ -173,7 +177,67 @@ namespace EcoDoTempo
         static void SliceCharacterSheets()
         {
             SliceSheet("Assets/Resources/Characters/lia_idle.png", 32);
+            SliceSheet("Assets/Resources/Characters/lia_walk.png", 32);
             SliceSheet("Assets/Resources/Characters/lia_jump.png", 32);
+        }
+
+        // Copies already on disk still have the painted plate and the bridge band.
+        static void HidePaintedScenery()
+        {
+            for (int i = 1; i <= 4; i++)
+            {
+                string path = "Assets/Resources/Levels/Level" + i + ".prefab";
+                if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) continue;
+                var root = PrefabUtility.LoadPrefabContents(path);
+                bool dirty = DeactivatePainted(root);
+                if (dirty) PrefabUtility.SaveAsPrefabAsset(root, path);
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        static void HidePaintedSceneryInOpenScene()
+        {
+            bool dirty = false;
+            foreach (var background in Object.FindObjectsByType<LevelBackground>(FindObjectsInactive.Include))
+            {
+                if (background != null && background.gameObject.activeSelf)
+                {
+                    background.gameObject.SetActive(false);
+                    dirty = true;
+                }
+            }
+
+            foreach (var transform in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
+            {
+                if (transform != null && transform.name == "BridgeStrip" && transform.gameObject.activeSelf)
+                {
+                    transform.gameObject.SetActive(false);
+                    dirty = true;
+                }
+            }
+
+            if (dirty) EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+        }
+
+        static bool DeactivatePainted(GameObject root)
+        {
+            bool dirty = false;
+            foreach (var background in root.GetComponentsInChildren<LevelBackground>(true))
+            {
+                if (!background.gameObject.activeSelf) continue;
+                background.gameObject.SetActive(false);
+                dirty = true;
+            }
+
+            foreach (var transform in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (transform.name != "BridgeStrip" || !transform.gameObject.activeSelf) continue;
+                transform.gameObject.SetActive(false);
+                dirty = true;
+            }
+
+            return dirty;
         }
 
 #pragma warning disable CS0618
