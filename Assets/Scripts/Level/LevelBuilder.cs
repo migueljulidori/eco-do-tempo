@@ -150,11 +150,13 @@ namespace EcoDoTempo
 
         static void PlaceBridgeSpans(List<BridgeSpan> spans, Transform root, int height)
         {
-            const string plankArt = "Tiles/bridge_plank_tile";
+            string plankArt = ArtCatalog.FirstExisting(
+                "Tiles/bridge_plank_tile", "Tiles/bridge_plank", "Tiles/block_wood_past", "Tiles/floor_a");
 
             foreach (var span in spans)
             {
                 float worldY = height - 1 - span.Row + SceneYAlign;
+                float centerX = span.Start + (span.Length - 1) * 0.5f;
 
                 for (int i = 0; i < span.Length; i++)
                 {
@@ -163,6 +165,24 @@ namespace EcoDoTempo
                         EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock);
                     var sr = plank.GetComponent<SpriteRenderer>();
                     if (sr != null) sr.sortingOrder = 1;
+                }
+
+                if (ArtCatalog.Has("Tiles/bridge_plank"))
+                {
+                    var strip = SpriteFactory.CreateObject("BridgeStrip", root,
+                        new Vector2(centerX, worldY), new Vector2(span.Length, 1f),
+                        SpriteFactory.Square, Palette.PastBlock, 2);
+                    if (ArtCatalog.TryApply(strip, "Tiles/bridge_plank", new Vector2(span.Length, 1f)))
+                    {
+                        strip.transform.position = new Vector3(centerX, worldY, 0f);
+                        ArtCatalog.SetEraArt(strip, "Tiles/bridge_plank", "Tiles/bridge_plank",
+                            new Vector2(span.Length, 1f));
+                        TimeObject.Add(strip, EraPresence.PastOnly, Palette.PastBlock, Palette.PastBlock, solid: false);
+                    }
+                    else
+                    {
+                        Object.Destroy(strip);
+                    }
                 }
             }
         }

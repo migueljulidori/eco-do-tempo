@@ -50,47 +50,28 @@ namespace EcoDoTempo
             return paths.Length > 0 ? paths[0] : null;
         }
 
-        // Past floor cycles by column. Future keeps the stone/metal alternation.
+        // Coherent walkable surface: two-tone checker, not a random mix.
         public static void PickFloorPair(Vector2 pos, out string past, out string future)
         {
-            int column = (int)pos.x;
-            int pastIndex = PositiveMod(column, 3);
-            if (pastIndex == 0)
-                past = FirstExisting("Tiles/floor_a", "Tiles/block_stone_past", "Tiles/wall");
-            else if (pastIndex == 1)
-                past = FirstExisting("Tiles/floor_b", "Tiles/floor_a", "Tiles/block_stone_past");
-            else
-                past = FirstExisting("Tiles/floor_c", "Tiles/floor_b", "Tiles/floor_a");
-
-            bool stone = (column & 1) == 0;
-            future = stone
+            bool alt = ((int)pos.x & 1) == 0;
+            past = alt
+                ? FirstExisting("Tiles/floor_a", "Tiles/block_stone_past", "Tiles/wall")
+                : FirstExisting("Tiles/floor_b", "Tiles/floor_a", "Tiles/block_stone_past");
+            future = alt
                 ? FirstExisting("Tiles/block_stone_future", "Tiles/block_metal_future", "Tiles/block_future")
                 : FirstExisting("Tiles/block_metal_future", "Tiles/block_stone_future", "Tiles/block_future");
         }
 
-        // Past wall cycles by column + row. Future keeps the stone/metal alternation.
+        // Fill under the ledge: one family per era.
         public static void PickWallPair(Vector2 pos, out string past, out string future)
         {
-            int column = (int)pos.x;
-            int row = (int)pos.y;
-            int pastIndex = PositiveMod(column + row, 3);
-            if (pastIndex == 0)
-                past = FirstExisting("Tiles/wall", "Tiles/block_stone_past");
-            else if (pastIndex == 1)
-                past = FirstExisting("Tiles/wall_b", "Tiles/wall", "Tiles/block_stone_past");
-            else
-                past = FirstExisting("Tiles/wall_c", "Tiles/wall_b", "Tiles/wall");
-
-            bool stone = ((column + row) & 1) == 0;
-            future = stone
+            bool alt = (((int)pos.x + (int)pos.y) & 1) == 0;
+            past = alt
+                ? FirstExisting("Tiles/wall", "Tiles/block_stone_past")
+                : FirstExisting("Tiles/wall_b", "Tiles/wall", "Tiles/block_stone_past");
+            future = alt
                 ? FirstExisting("Tiles/block_stone_future", "Tiles/block_metal_future")
                 : FirstExisting("Tiles/block_metal_future", "Tiles/block_stone_future");
-        }
-
-        static int PositiveMod(int value, int divisor)
-        {
-            int mod = value % divisor;
-            return mod < 0 ? mod + divisor : mod;
         }
 
         public static void PickGardenFloor(Vector2 pos, out string past, out string future)
